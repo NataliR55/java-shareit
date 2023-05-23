@@ -10,11 +10,11 @@ public interface UserService {
 
     UserDto update(UserDto user);
 
-    UserDto partialUpdate(long id, Map<String, String> updates);
+    UserDto patchUpdate(long id, Map<String, String> updates);
 
     UserDto get(long id);
 
-    List<UserDto> findAll();
+    List<UserDto> getAll();
 
     void delete(long userId);
 

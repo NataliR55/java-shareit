@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public final class UserMapper {
-    public static UserDto mapToUserDto(User user) {
+    public static UserDto toUserDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -15,13 +15,13 @@ public final class UserMapper {
                 .build();
     }
 
-    public static List<UserDto> mapToUsersDto(List<User> users) {
+    public static List<UserDto> toUserDtoList(List<User> users) {
         return users.stream()
-                .map(user -> mapToUserDto(user))
+                .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
     }
 
-    public static User mapToUser(UserDto user) {
+    public static User toUser(UserDto user) {
         return User.builder()
                 .id(user.getId())
                 .email(user.getEmail())

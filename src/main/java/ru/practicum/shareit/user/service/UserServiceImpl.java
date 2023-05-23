@@ -33,8 +33,8 @@ public class UserServiceImpl implements UserService {
         }
         checkEmail(user.getEmail(), -1L);
         checkName(user.getName(), -1L);
-        User newUser = userRepository.add(UserMapper.mapToUser(user));
-        return UserMapper.mapToUserDto(newUser);
+        User newUser = userRepository.add(UserMapper.toUser(user));
+        return UserMapper.toUserDto(newUser);
     }
 
     @Override
@@ -47,13 +47,13 @@ public class UserServiceImpl implements UserService {
         get(id);
         checkEmail(user.getEmail(), id);
         checkName(user.getName(), id);
-        User userUpdate = userRepository.update(UserMapper.mapToUser(user));
-        return UserMapper.mapToUserDto(userUpdate);
+        User userUpdate = userRepository.update(UserMapper.toUser(user));
+        return UserMapper.toUserDto(userUpdate);
     }
 
     @Override
-    public UserDto partialUpdate(long id, Map<String, String> updates) {
-        User user = userRepository.getUser(id);
+    public UserDto patchUpdate(long id, Map<String, String> updates) {
+        User user = userRepository.get(id);
         if (updates.containsKey("name")) {
             String name = updates.get("name");
             checkName(name, id);
@@ -64,22 +64,22 @@ public class UserServiceImpl implements UserService {
             checkEmail(email, id);
             user.setEmail(email.trim());
         }
-        return UserMapper.mapToUserDto(user);
+        return UserMapper.toUserDto(user);
     }
 
     @Override
     public UserDto get(long id) {
-        return UserMapper.mapToUserDto(userRepository.getUser(id));
+        return UserMapper.toUserDto(userRepository.get(id));
     }
 
     @Override
-    public List<UserDto> findAll() {
-        return UserMapper.mapToUsersDto(userRepository.findAll());
+    public List<UserDto> getAll() {
+        return UserMapper.toUserDtoList(userRepository.findAll());
     }
 
     @Override
     public void delete(long userId) {
-        userRepository.deleteUser(userId);
+        userRepository.delete(userId);
     }
 
     @Override
@@ -88,13 +88,13 @@ public class UserServiceImpl implements UserService {
             log.info("User email empty!");
             throw new ValidationException("User email is empty!");
         }
-        String foundEmail = email.trim().toLowerCase();
-        //.filter(t -> foundEmail.equals(t.getEmail().toLowerCase()))
+        String foundEmail = email.trim();
+
         Optional<User> userFound = userRepository.findAll().stream()
                 .filter(t -> {
                     return t.getId() != id;
                 })
-                .filter(t -> foundEmail.equals(t.getEmail().toLowerCase()))
+                .filter(t -> foundEmail.equalsIgnoreCase(t.getEmail()))
                 .findFirst();
         if (userFound.isPresent()) {
             log.info("User with email {} already exist!", email);
@@ -108,12 +108,12 @@ public class UserServiceImpl implements UserService {
             log.info("User name empty!");
             throw new ValidationException("User name is empty!");
         }
-        String foundName = name.trim().toLowerCase();
+        String foundName = name.trim();
         Optional<User> userFound = userRepository.findAll().stream()
                 .filter(t -> {
                     return t.getId() != id;
                 })
-                .filter(t -> foundName.equals(t.getEmail().toLowerCase()))
+                .filter(t -> foundName.equalsIgnoreCase(t.getEmail()))
                 .findFirst();
         if (userFound.isPresent()) {
             log.info("User with name {} already exist!", name);
@@ -123,7 +123,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteAll() {
-        userRepository.deleteAllUser();
+        userRepository.deleteAll();
     }
 
 }

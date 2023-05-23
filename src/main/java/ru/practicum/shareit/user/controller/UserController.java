@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,13 +14,9 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping(path = "/users")
+@RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-
-    @Autowired
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @PostMapping
     public UserDto create(@Valid @RequestBody UserDto user) {
@@ -28,13 +25,13 @@ public class UserController {
     }
 
     @PutMapping
-    public UserDto update(@Valid @RequestBody UserDto user) {
+    public UserDto updateUser(@Valid @RequestBody UserDto user) {
         return userService.update(user);
     }
 
     @PatchMapping("{id}")
-    public UserDto partialUpdate(@PathVariable(required = true) long id, @RequestBody Map<String, String> updates) {
-        return userService.partialUpdate(id, updates);
+    public UserDto patchUpdate(@PathVariable(required = true) long id, @RequestBody Map<String, String> updates) {
+        return userService.patchUpdate(id, updates);
     }
 
     @GetMapping("{id}")
@@ -43,8 +40,8 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserDto> findAll() {
-        return userService.findAll();
+    public List<UserDto> getAllUsers() {
+        return userService.getAll();
     }
 
     @DeleteMapping("{id}")

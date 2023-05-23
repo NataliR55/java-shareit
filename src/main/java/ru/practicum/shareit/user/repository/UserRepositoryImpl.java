@@ -37,7 +37,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User getUser(long id) {
+    public User get(long id) {
         User user = users.get(id);
         if (user != null) {
             return user;
@@ -47,13 +47,13 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void deleteUser(long userId) {
-        getUser(userId);
+    public void delete(long userId) {
+        get(userId);
         users.remove(userId);
     }
 
     @Override
-    public void deleteAllUser() {
+    public void deleteAll() {
         lastId = 0;
         users.clear();
     }

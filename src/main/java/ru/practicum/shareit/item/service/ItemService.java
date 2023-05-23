@@ -6,18 +6,18 @@ import java.util.List;
 import java.util.Map;
 
 public interface ItemService {
-    ItemDto add(ItemDto item);
+    ItemDto add(long ownerId, ItemDto item);
 
-    ItemDto update(ItemDto item);
 
-    ItemDto partialUpdate(long id, Map<String, String> updates);
+    ItemDto update(long ownerId, long itemId, Map<String, String> updates);
 
     ItemDto get(long id);
 
-    List<ItemDto> findAll();
+    List<ItemDto> getAll(long ownerId);
 
-    void delete(long id);
+    List<ItemDto> searchItems(String query);
+
+    void delete(long ownerId, long itemId);
 
     void deleteAll();
-
 }

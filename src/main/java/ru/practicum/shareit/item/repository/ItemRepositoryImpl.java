@@ -4,12 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -20,31 +21,50 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public Item add(Item item) {
-        return null;
+        item.setId(++lastId);
+        log.info("New item added: {}", item);
+        items.put(lastId, item);
+        return item;
     }
 
     @Override
     public Item update(Item item) {
-        return null;
+        items.put(item.getId(), item);
+        log.info("Item updated {}", item);
+        return item;
     }
 
     @Override
-    public List<Item> findAll() {
-        return null;
+    public List<Item> getAll() {
+        return new ArrayList<>(items.values());
+    }
+
+    @Override
+    public List<Item> getAllByOwner(long ownerId) {
+        return new ArrayList<>(items.values().stream()
+                .filter(i -> (i.getOwner() != null && i.getOwner().getId() == ownerId))
+                .collect(Collectors.toList()));
     }
 
     @Override
     public Item get(long id) {
-        return null;
+        Item item = items.get(id);
+        if (item != null) {
+            return item;
+        }
+        log.info("Item with id:{} not exists.", id);
+        throw new NotFoundException(String.format("Item with id: %d is not exist", id));
     }
 
     @Override
-    public void delete(long userId) {
-
+    public void delete(long itemId) {
+        get(itemId);
+        items.remove(itemId);
     }
 
     @Override
     public void deleteAll() {
-
+        lastId = 0;
+        items.clear();
     }
 }

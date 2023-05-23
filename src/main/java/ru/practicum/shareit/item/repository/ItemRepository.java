@@ -9,7 +9,9 @@ public interface ItemRepository {
 
     Item update(Item item);
 
-    List<Item> findAll();
+    List<Item> getAll();
+
+    List<Item> getAllByOwner(long ownerId);
 
     Item get(long id);
 

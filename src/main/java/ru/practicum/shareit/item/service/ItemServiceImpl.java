@@ -82,7 +82,6 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException(String.format("Item id: %s owner id: %s is not found.", itemId
                         , ownerId)));
         itemRepository.delete(itemId);
-
     }
 
     @Override

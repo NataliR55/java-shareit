@@ -6,7 +6,6 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.List;
 import java.util.stream.Collectors;
 
-//TODO
 public class ItemMapper {
     public static ItemDto toItemDto(Item item) {
         return ItemDto.builder()
@@ -24,7 +23,7 @@ public class ItemMapper {
                 .name(item.getName())
                 .description(item.getDescription())
                 .available(item.getAvailable())
-                .request(item.getRequest() != null ? item.getRequest() : null)
+                .request(item.getRequest())
                 .build();
     }
 

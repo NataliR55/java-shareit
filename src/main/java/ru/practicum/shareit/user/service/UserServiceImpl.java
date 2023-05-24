@@ -91,9 +91,7 @@ public class UserServiceImpl implements UserService {
         String foundEmail = email.trim();
 
         Optional<User> userFound = userRepository.findAll().stream()
-                .filter(t -> {
-                    return t.getId() != id;
-                })
+                .filter(t -> t.getId() != id)
                 .filter(t -> foundEmail.equalsIgnoreCase(t.getEmail()))
                 .findFirst();
         if (userFound.isPresent()) {
@@ -110,9 +108,7 @@ public class UserServiceImpl implements UserService {
         }
         String foundName = name.trim();
         Optional<User> userFound = userRepository.findAll().stream()
-                .filter(t -> {
-                    return t.getId() != id;
-                })
+                .filter(t -> t.getId() != id)
                 .filter(t -> foundName.equalsIgnoreCase(t.getEmail()))
                 .findFirst();
         if (userFound.isPresent()) {

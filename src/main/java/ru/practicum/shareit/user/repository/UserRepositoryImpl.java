@@ -58,13 +58,4 @@ public class UserRepositoryImpl implements UserRepository {
         users.clear();
     }
 
-    private long getNewId() {
-        return users.keySet().stream()
-                .max(Comparator.comparing(Long::longValue)).orElse(0L) + 1;
-    }
-
-    private User getById(Long id) {
-        Optional<User> user = Optional.ofNullable(users.get(id));
-        return user.orElseThrow(() -> new NotFoundException("User not found id= " + id));
-    }
 }

@@ -37,8 +37,8 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.getAllByOwner(ownerId).stream()
                 .filter(i -> i.getId() == itemId)
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException(String.format("Item id: %s owner id: %s is not found.", itemId
-                        , ownerId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Item id: %s owner id: %s is not found.", itemId,
+                        ownerId)));
 
         if (updates.containsKey("name")) {
             String value = updates.get("name");
@@ -79,8 +79,8 @@ public class ItemServiceImpl implements ItemService {
         itemRepository.getAllByOwner(ownerId).stream()
                 .filter(i -> i.getId() == itemId)
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException(String.format("Item id: %s owner id: %s is not found.", itemId
-                        , ownerId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Item id: %s owner id: %s is not found.", itemId,
+                        ownerId)));
         itemRepository.delete(itemId);
     }
 

@@ -25,11 +25,10 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
 
     @Override
-    public ItemDto add(long ownerId, ItemDto item) {
-        Item newItem = ItemMapper.toItem(item);
-        User owner = userRepository.get(ownerId);
-        newItem.setOwner(owner);
-        return ItemMapper.toItemDto(itemRepository.add(newItem));
+    public ItemDto add(long ownerId, Item item) {
+        User owner = userRepository.getUserById(ownerId);
+        item.setOwner(owner);
+        return ItemMapper.toItemDto(itemRepository.add(item));
     }
 
     @Override

@@ -1,8 +1,7 @@
 package ru.practicum.shareit.user.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.InternalServerError;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -17,43 +16,29 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
-    @Autowired
-    public UserServiceImpl(@Qualifier("userRepository") UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
     @Override
-    public UserDto add(UserDto user) {
-        if (user == null) {
-            log.info("You try add null User.");
-            throw new ValidationException("You try add null User.");
-        }
+    public UserDto add(User user) {
         checkEmail(user.getEmail(), -1L);
         checkName(user.getName(), -1L);
-        User newUser = userRepository.add(UserMapper.toUser(user));
-        return UserMapper.toUserDto(newUser);
+        return UserMapper.toUserDto(userRepository.add(user));
     }
 
     @Override
-    public UserDto update(UserDto user) {
-        if (user == null) {
-            log.info("User is null!");
-            throw new ValidationException("User is null!");
-        }
+    public UserDto update(User user) {
         long id = user.getId();
-        get(id);
+        getUserById(id);
         checkEmail(user.getEmail(), id);
         checkName(user.getName(), id);
-        User userUpdate = userRepository.update(UserMapper.toUser(user));
-        return UserMapper.toUserDto(userUpdate);
+        return UserMapper.toUserDto(userRepository.update(user));
     }
 
     @Override
     public UserDto patchUpdate(long id, Map<String, String> updates) {
-        User user = userRepository.get(id);
+        User user = userRepository.getUserById(id);
         if (updates.containsKey("name")) {
             String name = updates.get("name");
             checkName(name, id);
@@ -68,8 +53,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto get(long id) {
-        return UserMapper.toUserDto(userRepository.get(id));
+    public UserDto getUserById(long id) {
+        return UserMapper.toUserDto(userRepository.getUserById(id));
     }
 
     @Override

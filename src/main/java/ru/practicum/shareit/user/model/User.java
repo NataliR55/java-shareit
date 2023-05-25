@@ -17,20 +17,4 @@ public class User {
     @Email(message = "Field: Email must have the format EMAIL!")
     @NotBlank(message = "Field: Email must be filled!")
     private String email;
-
-    public static class UserBuilder {
-        private String email;
-        private String name;
-
-        public UserBuilder email(String email) {
-            this.email = email.trim();
-            return this;
-        }
-
-        public UserBuilder name(String name) {
-            this.name = (name == null || name.isBlank()) ? email : name.trim();
-            return this;
-        }
-    }
-
 }

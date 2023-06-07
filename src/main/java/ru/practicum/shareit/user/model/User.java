@@ -11,16 +11,22 @@ import javax.validation.constraints.Pattern;
 @Data
 @Builder
 @Entity
-@Table(name = "users")
+@Table(name = "users", schema = "public")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotBlank
-    @Column(name = "name", nullable = false)
+    @Pattern(regexp = "\\S+")
+    @Column(name = "name", length = 128, nullable = false)
     private String name;
     @Email(message = "Field: Email must have the format EMAIL!")
     @NotBlank(message = "Field: Email must be filled!")
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", length = 128, nullable = false, unique = true)
     private String email;
+
+    //@Enumerated(EnumType.STRING)
+    //private UserState state;
+    //@Column(name = "registration_date")
+    //private Instant registrationDate = Instant.now();
+
 }

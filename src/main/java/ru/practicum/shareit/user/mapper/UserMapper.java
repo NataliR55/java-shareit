@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 
 @UtilityClass
 public final class UserMapper {
+    private UserMapper() {
+    }
+
     public static UserDto toUserDto(User user) {
         return UserDto.builder()
                 .id(user.getId())

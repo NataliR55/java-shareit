@@ -6,18 +6,7 @@ import ru.practicum.shareit.user.model.User;
 import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-/*
-    User add(User user);
+    List<User> findUsersByEmailEqualsIgnoreCase(String email);
 
-    User update(User user);
-
-    List<User> findAll();
-
-    User getUserById(long id);
-
-    void delete(long userId);
-
-    void deleteAll();
-
- */
+    List<User> findUsersByNameEqualsIgnoreCase(String name);
 }

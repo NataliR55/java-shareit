@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.service.ItemService;
@@ -26,24 +27,24 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto patchUpdate(@RequestHeader(userIdInHeader) long ownerId, @PathVariable long itemId,
-                               @RequestBody @NotNull Map<String, String> updates) {
+    public ItemDto update(@RequestHeader(userIdInHeader) long ownerId, @PathVariable long itemId,
+                          @RequestBody @NotNull Map<String, String> updates) {
         return itemService.update(ownerId, itemId, updates);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItem(@PathVariable long itemId) {
-        return itemService.get(itemId);
+    public ItemDto getItem(@RequestHeader(userIdInHeader) long userId, @PathVariable long itemId) {
+        return itemService.getItemById(itemId, userId);
     }
 
     @GetMapping
     public List<ItemDto> getAll(@RequestHeader(userIdInHeader) long ownerId) {
-        return itemService.getAll(ownerId);
+        return itemService.getAllUserItems(ownerId);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@RequestParam(name = "text") String text) {
-        return itemService.searchItems(text);
+    public List<ItemDto> searchItems(@RequestHeader(userIdInHeader) long userId, @RequestParam(name = "text") String text) {
+        return itemService.searchItems(userId, text);
     }
 
     @DeleteMapping("/{itemId}")
@@ -51,4 +52,10 @@ public class ItemController {
         itemService.delete(ownerId, itemId);
     }
 
+    //добавление нового комментария на арендованную вещь(по itemId) может только арендатор уже бравший эту вещь
+    @PostMapping("/{itemId}/comment")
+    public void addComment(@RequestHeader(userIdInHeader) long userId, @PathVariable long itemId,
+                           @Valid @RequestBody CommentDto commentDto) {
+        itemService.addComment(userId, itemId, commentDto);
+    }
 }

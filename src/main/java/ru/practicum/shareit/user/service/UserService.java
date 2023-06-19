@@ -4,18 +4,18 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
+import java.util.Map;
 
 public interface UserService {
-    List<UserDto> getAllUsers();
-    UserDto saveUser(UserDto userDto);
-
-/*    UserDto add(User user);
+    UserDto add(User user);
 
     UserDto update(User user);
 
     UserDto patchUpdate(long id, Map<String, String> updates);
 
-    UserDto getUserById(long id);
+    User getUserById(long id);
+
+    UserDto getUserDtoById(long id);
 
     List<UserDto> getAll();
 
@@ -23,8 +23,4 @@ public interface UserService {
 
     void deleteAll();
 
-    void checkEmail(String email, long id);
-
-    void checkName(String name, long id);
-*/
 }

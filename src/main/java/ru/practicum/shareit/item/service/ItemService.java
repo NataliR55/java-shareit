@@ -1,5 +1,7 @@
 package ru.practicum.shareit.item.service;
 
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
@@ -9,15 +11,17 @@ import java.util.Map;
 public interface ItemService {
     ItemDto add(long ownerId, Item item);
 
-    ItemDto update(long ownerId, long itemId, Map<String, String> updates);
+    ItemDto update(Long ownerId, Long itemId, Map<String, String> updates);
 
-    ItemDto get(long id);
+    ItemDto getItemById(Long itemId, Long userId);
 
-    List<ItemDto> getAll(long ownerId);
+    List<ItemDto> getAllUserItems(Long userId);
 
-    List<ItemDto> searchItems(String query);
+    List<ItemDto> searchItems(Long userId, String query);
 
-    void delete(long ownerId, long itemId);
+    void delete(Long ownerId, Long itemId);
 
     void deleteAll();
+
+    CommentDto addComment(Long userId, Long itemId, CommentDto commentDto);
 }

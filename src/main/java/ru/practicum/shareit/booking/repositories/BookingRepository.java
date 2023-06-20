@@ -19,7 +19,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     void update(BookingStatus status, Long bookingId);
 
     List<Booking> findByBooker_IdAndEndIsBefore(Long bookerId, LocalDateTime end, Sort sort);
-
+ /*
     //запросы по юзеру
 
     List<Booking> findByBooker_IdAndEndIsBefore(Long bookerId, LocalDateTime end, Sort sort);
@@ -39,7 +39,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByBookerIdAndStartIsAfterAndStatusIsOrderByStartDesc(Long bookerId,
                                                                               LocalDateTime start,
                                                                               BookingStatus status);
-   /*
+
     @Query("select b from Booking b " +
             "inner join Item i on b.item.id = i.id " +
             "where i.ownerId = :ownerId " +

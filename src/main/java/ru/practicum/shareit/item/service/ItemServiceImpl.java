@@ -17,7 +17,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.user.service.UserService;
 
 import java.util.Collections;
 import java.util.List;
@@ -30,14 +30,13 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final BookingRepository bookingRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final CommentRepository commentRepository;
 
     @Transactional
     @Override
     public ItemDto add(long ownerId, Item item) {
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new NotFoundException(String.format("User with id %d not found", ownerId)));
+        User owner = userService.getUserById(ownerId);
         item.setOwner(owner);
         return ItemMapper.toItemDto(itemRepository.save(item));
     }
@@ -45,8 +44,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public ItemDto update(Long ownerId, Long itemId, Map<String, String> updates) {
-        Item item = itemRepository.findById(itemId).orElseThrow(() ->
-                new NotFoundException(String.format("Item id: %s owner id: %s is not found.", itemId, ownerId)));
+        Item item = getItemById(itemId);
         if (!getOwnerId(itemId).equals(ownerId)) {
             throw new NotFoundException(String.format("User with id:%s is not owner Item with id: %s", ownerId, itemId));
         }
@@ -67,9 +65,11 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toItemDto(itemRepository.save(item));
     }
 
+    @Transactional
+    @Override
     public Long getOwnerId(Long itemId) {
-        User owner = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException(String.format("Item with id = %d not found.", itemId))).getOwner();
+        Item item = getItemById(itemId);
+        User owner = item.getOwner();
         if (owner == null) throw new InternalServerError("Item with id = %d not have owner!");
         return owner.getId();
     }
@@ -83,9 +83,14 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional
     @Override
-    public ItemDto getItemById(Long itemId, Long userId) {
-        Item item = itemRepository.findById(itemId)
+    public Item getItemById(Long itemId) {
+        return itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item with id = %d not found.", itemId)));
+    }
+
+    @Override
+    public ItemDto getItemDtoById(Long itemId, Long userId) {
+        Item item = getItemById(itemId);
         List<Comment> comments = commentRepository.findAllByItemId(item.getId());
         ItemDto itemDto = ItemMapper.toItemDto(item);
         itemDto.setComments(CommentMapper.toDtoList(comments));
@@ -127,8 +132,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public void delete(Long ownerId, Long itemId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException(String.format("Item with id = %d not found.", itemId)));
+        Item item = getItemById(itemId);
         if (!getOwnerId(itemId).equals(ownerId)) {
             throw new NotFoundException(String.format("User with id:%d is not owner Item with id:%d not found.",
                     ownerId, itemId));
@@ -152,10 +156,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public CommentDto addComment(Long userId, Long itemId, CommentDto commentDto) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException(String.format("Item with id = %d not found.", itemId)));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(String.format("User with id = %d not found.", userId)));
+        Item item = getItemById(itemId);
+        User user = userService.getUserById(userId);
 //        List<Booking> bookings = bookingRepository
 //                .findAllByItemIdAndBookerIdAndStatusIsAndEndIsBefore(itemId, userId, BookingStatus.APPROVED, LocalDateTime.now());
 //        log.info(bookings.toString());

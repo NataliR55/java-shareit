@@ -22,8 +22,8 @@ import ru.practicum.shareit.user.service.UserService;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+@SuppressWarnings("checkstyle:Regexp")
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -65,7 +65,7 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toItemDto(itemRepository.save(item));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public Long getOwnerId(Long itemId) {
         Item item = getItemById(itemId);
@@ -81,7 +81,7 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public Item getItemById(Long itemId) {
         return itemRepository.findById(itemId)
@@ -97,13 +97,12 @@ public class ItemServiceImpl implements ItemService {
         return itemDto;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public List<ItemDto> getAllUserItems(Long userId) {
         List<ItemDto> itemDtos = ItemMapper.toItemDtoList(itemRepository.findAllByOwnerId(userId));
         return itemDtos.stream()
-                .peek(i -> i.setComments(CommentMapper.toDtoList(commentRepository.findAllByItemId(i.getId()))))
-                .collect(Collectors.toList());
+                .forEach(i -> i.setComments(CommentMapper.toDtoList(commentRepository.findAllByItemId(i.getId()))));
     }
 
     //todo   удалить после тога как разберешься c Page
@@ -173,5 +172,83 @@ public class ItemServiceImpl implements ItemService {
         return commentDto;
     }
 
+/* TODO  переделать запрос по comments to Item  - здесь интеросно работа с Map и исключение множества запросов
+
+    public Collection<PostWithCommentsDto> getComments() {
+        // выгружаем посты (один запрос)
+        Map<Long, Post> postMap = postService.findAllPostsWithAuthors()
+                .stream()
+                .collect(Collectors.toMap(Post::getId, Function.identity()));
+        // выгружаем комментарии (ещё один запрос)
+        Map<Long, List<Comment>> commentMap = commentService.getByPostId(postMap.keySet())
+                .stream()
+                .collect(Collectors.groupingBy(Comment::getPostId));
+        // готовим окончательный результат из полученных данных (нет обращений к БД)
+        return postMap.values()
+                .stream()
+                .map(post -> makePostWithCommentsDto(
+                        post,
+                        commentMap.getOrDefault(post.getId(), Collections.emptyList())
+                ))
+                .collect(Collectors.toList());
+    }
+
+    private PostWithCommentsDto makePostWithCommentsDto(Post post, List<Comment> comments) {
+        // конвертируем комментарии в DTO
+        List<CommentDto> commentDtos = comments
+                .stream()
+                .map(comment -> CommentDto.of(comment.getId(), comment.getText(), comment.getPostId()))
+                .collect(Collectors.toList());
+        // формируем окончательное представление для данного поста
+        User author = post.getAuthor();
+
+        return PostWithCommentsDto.of(
+                post.getId(), post.getTitle(), post.getText(),
+                UserDto.of(author.getId(), author.getName(), author.getEmail()),
+                commentDtos
+        );
+    }
+
+
+    @Transactional
+    @Override
+    public CommentDto addComment(long userId, long itemId, CommentDto commentDto) {
+        Comment comment = commentMapper.convertFromDto(commentDto);
+        User user = userService.getUserById(userId);
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new UserOrItemNotFoundException(
+                String.format("Вещь с id %s не найдена", itemId)));
+        List<Booking> bookings = bookingRepository.findAllByItemIdAndBookerIdAndStatus(itemId, userId, Status.APPROVED,
+                Sort.by(Sort.Direction.DESC, "start")).orElseThrow(() -> new UserOrItemNotFoundException(
+                String.format("Пользователь с id %d не арендовал вещь с id %d.", userId, itemId)));
+        Logger.logInfo(HttpMethod.POST, "/items/" + itemId + "/comment", bookings.toString());
+        bookings.stream().filter(booking -> booking.getEnd().isBefore(LocalDateTime.now())).findAny().orElseThrow(() ->
+                new UserOrItemNotAvailableException(String.format("Пользователь с id %d не может оставлять комментарии вещи " +
+                        "с id %d.", userId, itemId)));
+        comment.setAuthor(user);
+        comment.setItem(item);
+        comment.setCreated(LocalDateTime.now());
+        Comment commentSaved = commentRepository.save(comment);
+        return commentMapper.convertToDto(commentSaved);
+    }
+
+    private void setBookings(ItemDto itemDto, List<BookingDtoShort> bookings) {
+        itemDto.setLastBooking(bookings.stream()
+                .filter(booking -> booking.getItem().getId() == itemDto.getId() &&
+                        booking.getStart().isBefore(LocalDateTime.now()))
+                .reduce((a, b) -> b).orElse(null));
+        itemDto.setNextBooking(bookings.stream()
+                .filter(booking -> booking.getItem().getId() == itemDto.getId() &&
+                        booking.getStart().isAfter(LocalDateTime.now()))
+                .reduce((a, b) -> a).orElse(null));
+    }
+
+    private void setComments(ItemDto itemDto, List<Comment> comments) {
+        itemDto.setComments(comments.stream()
+                .filter(comment -> comment.getItem().getId() == itemDto.getId())
+                .map(commentMapper::convertToDto)
+                .collect(Collectors.toList()));
+    }
+
+ */
 }
 

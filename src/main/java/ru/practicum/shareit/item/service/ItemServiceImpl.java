@@ -2,9 +2,13 @@ package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingDtoShort;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repositories.BookingRepository;
+import ru.practicum.shareit.booking.services.BookingService;
 import ru.practicum.shareit.exception.InternalServerError;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -22,6 +26,7 @@ import ru.practicum.shareit.user.service.UserService;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("checkstyle:Regexp")
 @Slf4j
@@ -29,7 +34,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
-    private final BookingRepository bookingRepository;
+    private final BookingService bookingService;
     private final UserService userService;
     private final CommentRepository commentRepository;
 
@@ -91,9 +96,23 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItemDtoById(Long itemId, Long userId) {
         Item item = getItemById(itemId);
-        List<Comment> comments = commentRepository.findAllByItemId(item.getId());
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
+        List<Comment> comments = commentRepository.findAllByItemId(item.getId(),
+                Sort.by(Sort.Direction.ASC, "created"));
         ItemDto itemDto = ItemMapper.toItemDto(item);
         itemDto.setComments(CommentMapper.toDtoList(comments));
+
+
+        List<Booking> bookings = bookingService.getBookingById()   .findByItemIdAndStatus(itemId, Status.APPROVED,
+                Sort.by(Sort.Direction.ASC, "start"));
+        List<BookingDtoShort> bookingDtoShorts = bookings.stream()
+                .map(bookingMapper::convertToDtoShort)
+                .collect(Collectors.toList());
+        if (item.getUserId() == userId) {   // Бронирования показываем только владельцу вещи
+            setBookings(itemDto, bookingDtoShorts);
+        }
+
+
         return itemDto;
     }
 
@@ -101,8 +120,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> getAllUserItems(Long userId) {
         List<ItemDto> itemDtos = ItemMapper.toItemDtoList(itemRepository.findAllByOwnerId(userId));
+        Sort sort = Sort.by(Sort.Direction.ASC, "created");
         return itemDtos.stream()
-                .forEach(i -> i.setComments(CommentMapper.toDtoList(commentRepository.findAllByItemId(i.getId()))));
+                .peek(i -> i.setComments(CommentMapper.toDtoList(commentRepository.findAllByItemId(i.getId(), sort))))
+                .collect(Collectors.toList());
     }
 
     //todo   удалить после тога как разберешься c Page

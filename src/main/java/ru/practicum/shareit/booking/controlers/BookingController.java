@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDtoInput;
 import ru.practicum.shareit.booking.dto.BookingDtoOutput;
 import ru.practicum.shareit.booking.model.State;
-import ru.practicum.shareit.booking.services.BookingServiceImpl;
+import ru.practicum.shareit.booking.services.BookingService;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -14,20 +14,20 @@ import java.util.List;
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
 public class BookingController {
-    private final BookingServiceImpl bookingService;
     private final String userIdInHeader = "X-Sharer-User-Id";
+    private final BookingService bookingService;
 
     @PostMapping
     public BookingDtoOutput create(@RequestHeader(userIdInHeader) long userId,
-                                   @Valid @RequestBody BookingDtoInput bookingDto) {
-        return bookingService.create(bookingDto, userId);
+                                   @Valid @RequestBody BookingDtoInput booking) {
+        return bookingService.create(booking, userId);
     }
 
     @PatchMapping("/{bookingId}")
     public BookingDtoOutput update(@RequestHeader(userIdInHeader) Long userId,
                                    @PathVariable Long bookingId,
-                                   @RequestParam Boolean approve) {
-        return bookingService.approveBooking(bookingId, userId, approve);
+                                   @RequestParam boolean approved) {
+        return bookingService.approveBooking(bookingId, userId, approved);
     }
 
     @GetMapping("/{bookingId}")

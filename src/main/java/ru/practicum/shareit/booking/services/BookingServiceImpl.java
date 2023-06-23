@@ -1,6 +1,6 @@
 package ru.practicum.shareit.booking.services;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +12,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.repositories.BookingRepository;
+import ru.practicum.shareit.exception.AccessException;
 import ru.practicum.shareit.exception.InternalServerError;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -24,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserService userService;
@@ -41,7 +42,7 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException(String.format("Wrong booking time start = %s and end = %s", start, end));
         }
         if (itemService.getOwnerId(item.getId()).equals(userId)) {
-            throw new ValidationException(String.format("Booker cannot be owner of item id: %d", userId));
+            throw new AccessException(String.format("Booker cannot be owner of item id: %d", userId));
         }
         if (!item.getAvailable()) {
             throw new ValidationException(String.format("Item with id: %d is not available!", userId));
@@ -60,9 +61,13 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public BookingDtoOutput approveBooking(Long bookingId, Long userId, Boolean approve) {
         Booking booking = getBookingById(bookingId, userId);
+        if (booking.getStatus().equals(BookingStatus.APPROVED)) {
+            throw new ValidationException(String.format("Booking with id: %d already have status %s",
+                    bookingId, BookingStatus.APPROVED));
+        }
         checkAccessToBooking(booking, userId, false);
         BookingStatus bookingStatus = approve ? BookingStatus.APPROVED : BookingStatus.REJECTED;
-        booking.setStatus(BookingStatus.APPROVED);
+        booking.setStatus(bookingStatus);
         bookingRepository.updateStatus(bookingStatus, bookingId);
         return BookingMapper.toBookingDtoOutput(bookingRepository.save(booking));
     }
@@ -78,16 +83,16 @@ public class BookingServiceImpl implements BookingService {
 
     private void checkAccessToBooking(Booking booking, Long userId, boolean accessForBooker) {
         User booker = booking.getBooker();
-        if (booker != null) {
+        if (booker == null) {
             throw new InternalServerError(String.format("For booking with id: %s Bouker is not installed!", booker.getId()));
         }
         Long bookerId = booker.getId();
         Item item = booking.getItem();
-        if (item != null) {
+        if (item == null) {
             throw new InternalServerError(String.format("For booking with id: %s Item is not installed!", booker.getId()));
         }
         User owner = item.getOwner();
-        if (owner != null) {
+        if (owner == null) {
             throw new InternalServerError(String.format("For booking with id: %s Owner is not installed!", booker.getId()));
         }
         Long ownerId = owner.getId();
@@ -97,7 +102,7 @@ public class BookingServiceImpl implements BookingService {
         if (accessForBooker && bookerId.equals(userId)) {
             return;
         }
-        throw new ValidationException(String.format("Access to User id:%s for booking id:%s is denied",
+        throw new AccessException(String.format("Access to User id:%s for booking id:%s is denied",
                 userId, booking.getId()));
     }
 
@@ -165,5 +170,14 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingDtoOutputs(bookings);
     }
 
+    public void setInItemLastAndNextBooking(Long itemId) {
+//TODO
+        //последний заказ Item:  последний заказ у которого start <= текущей даты или null
+        //следующий заказ Item: первый заказ у которого start >= текущего времени или null
+        LocalDateTime now = LocalDateTime.now();
+        bookingRepository.findFirstByItemIdAndStatus(itemId, BookingStatus.APPROVED,
+                Sort.by(Sort.Direction.DESC, "start"));
+
+    }
 
 }

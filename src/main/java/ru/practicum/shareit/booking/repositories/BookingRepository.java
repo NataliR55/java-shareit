@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Modifying
@@ -23,6 +24,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByBookerIdAndStartAfter(long bookerId, LocalDateTime start, Sort sort);
 
     List<Booking> findAllByBookerIdAndEndBefore(long bookerId, LocalDateTime end, Sort sort);
+
 
     @Query(value = "select b from Booking b where b.booker.id = ?1 and b.start < ?2 and b.end > ?2 order by b.start desc")
     List<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(long bookerId, LocalDateTime dateTime);
@@ -49,4 +51,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             " where o.id = :ownerId and b.start < :dateTime and b.end > :dateTime order by b.start desc")
     List<Booking> findAllByOwnerIdAndStartBeforeAndEndAfter(@Param("ownerId") Long ownerId,
                                                             @Param("dateTime") LocalDateTime dateTime);
+
+    List<Booking> findAllByItemIdAndStatus(long itemId, BookingStatus status, Sort sort);
+
+    List<Booking> findFirstByItemIdAndStatus(long itemId, BookingStatus status, Sort sort);
+
+    Optional<Booking> findFirstByItemIdAndStartBeforeAndStatus(long itemId, BookingStatus status, Sort sort);
 }

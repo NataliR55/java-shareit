@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 public class BookingDtoInput {
     @NotNull
     private Long itemId;
-    @NotNull(message = "Date must be filled")
-    @FutureOrPresent(message = "Date must be filled")
+    @NotNull(message = "Date must be filled!")
+    @FutureOrPresent(message = "Start must be current or future!")
     private LocalDateTime start;
-    @NotNull(message = "Date must be filled")
-    @Future(message = "Date must be filled")
+    @NotNull(message = "Date must be filled!")
+    @Future(message = "End must be future!")
     private LocalDateTime end;
 }

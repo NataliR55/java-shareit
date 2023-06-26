@@ -134,14 +134,14 @@ public class ItemServiceImpl implements ItemService {
         Long itemId = itemDto.getId();
         itemDto.setLastBooking(bookings.stream()
                 .filter(booking -> booking.getItem().getId().equals(itemId))
-                .filter(booking -> booking.getStart().compareTo(now) <= 0)
+                .filter(booking -> booking.getStart().isBefore(now))
                 .sorted(Comparator.comparing(Booking::getStart).reversed())
                 .limit(1)
                 .map(BookingMapper::toBookingDtoShort)
                 .findFirst().orElse(null));
         itemDto.setNextBooking(bookings.stream()
                 .filter(booking -> booking.getItem().getId().equals(itemId))
-                .filter(booking -> booking.getStart().compareTo(now) > 0)
+                .filter(booking -> booking.getStart().isAfter(now))
                 .sorted(Comparator.comparing(Booking::getStart))
                 .limit(1)
                 .map(BookingMapper::toBookingDtoShort)
@@ -197,48 +197,5 @@ public class ItemServiceImpl implements ItemService {
         comment.setCreated(LocalDateTime.now());
         return CommentMapper.toDto(commentRepository.save(comment));
     }
-
-
-/* TODO  переделать запрос по comments to Item  - здесь интеросно работа с Map и исключение множества запросов
-
-    public Collection<PostWithCommentsDto> getComments() {
-        // выгружаем посты (один запрос)
-        Map<Long, Post> postMap = postService.findAllPostsWithAuthors()
-                .stream()
-                .collect(Collectors.toMap(Post::getId, Function.identity()));
-        // выгружаем комментарии (ещё один запрос)
-        Map<Long, List<Comment>> commentMap = commentService.getByPostId(postMap.keySet())
-                .stream()
-                .collect(Collectors.groupingBy(Comment::getPostId));
-        // готовим окончательный результат из полученных данных (нет обращений к БД)
-        return postMap.values()
-                .stream()
-                .map(post -> makePostWithCommentsDto(
-                        post,
-                        commentMap.getOrDefault(post.getId(), Collections.emptyList())
-                ))
-                .collect(Collectors.toList());
-    }
-
-    private PostWithCommentsDto makePostWithCommentsDto(Post post, List<Comment> comments) {
-        // конвертируем комментарии в DTO
-        List<CommentDto> commentDtos = comments
-                .stream()
-                .map(comment -> CommentDto.of(comment.getId(), comment.getText(), comment.getPostId()))
-                .collect(Collectors.toList());
-        // формируем окончательное представление для данного поста
-        User author = post.getAuthor();
-
-        return PostWithCommentsDto.of(
-                post.getId(), post.getTitle(), post.getText(),
-                UserDto.of(author.getId(), author.getName(), author.getEmail()),
-                commentDtos
-        );
-    }
-
-
-
-
- */
 }
 

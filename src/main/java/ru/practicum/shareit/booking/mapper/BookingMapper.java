@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class BookingMapper {
+    private BookingMapper() {
+    }
+
     public static BookingDtoOutput toBookingDtoOutput(Booking booking) {
         return booking == null ? null : BookingDtoOutput.builder()
                 .id(booking.getId())

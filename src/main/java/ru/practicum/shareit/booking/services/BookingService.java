@@ -20,8 +20,4 @@ public interface BookingService {
     List<BookingDtoOutput> getBookingsOfBooker(State state, Long bookerId);
 
     List<BookingDtoOutput> getBookingsOfOwner(State state, Long ownerId);
-
-    BookingDtoOutput getLastBookingItem(long itemId);
-
-    BookingDtoOutput getNextBookingItem(long itemId);
 }

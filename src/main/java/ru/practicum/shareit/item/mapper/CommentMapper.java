@@ -23,10 +23,6 @@ public class CommentMapper {
                 .text(commentDto.getText())
                 .created(commentDto.getCreated())
                 .build();
-
-//        private Item item;
-//        private User author;
-
     }
 
     public static List<CommentDto> toDtoList(List<Comment> comments) {

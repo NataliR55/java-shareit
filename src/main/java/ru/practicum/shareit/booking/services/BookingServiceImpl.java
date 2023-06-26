@@ -1,8 +1,6 @@
 package ru.practicum.shareit.booking.services;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +31,6 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
 
-
     private User getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User with id %d not found", userId)));
@@ -51,7 +48,7 @@ public class BookingServiceImpl implements BookingService {
         Item item = getItemById(itemId);
         User owner = item.getOwner();
         if (owner == null) {
-            new AccessException(String.format("Item with id = %d not have owner.", itemId));
+            throw new AccessException(String.format("Item with id = %d not have owner.", itemId));
         }
         if (owner.getId().equals(userId)) {
             throw new AccessException(String.format("Booker cannot be owner of item id: %d", userId));
@@ -184,25 +181,5 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingRepository.findAllByOwnerId(ownerId, sort);
         }
         return BookingMapper.toBookingDtoOutputs(bookings);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public BookingDtoOutput getLastBookingItem(long itemId) {
-        //последний заказ Item: последний заказ у которого start < текущей даты или null
-        Pageable page = PageRequest.of(0, 1, Sort.by("start").descending());
-        Booking booking = bookingRepository.getLastBookingByItemId(itemId,
-                BookingStatus.APPROVED, LocalDateTime.now(), page).getContent().stream().findFirst().orElse(null);
-        return BookingMapper.toBookingDtoOutput(booking);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public BookingDtoOutput getNextBookingItem(long itemId) {
-        //следующий заказ Item: первый заказ у которого start > текущего времени или null
-        Pageable page = PageRequest.of(0, 1, Sort.by("start").ascending());
-        Booking booking = bookingRepository.getNextBookingByItemId(itemId,
-                BookingStatus.APPROVED, LocalDateTime.now(), page).getContent().stream().findFirst().orElse(null);
-        return BookingMapper.toBookingDtoOutput(booking);
     }
 }

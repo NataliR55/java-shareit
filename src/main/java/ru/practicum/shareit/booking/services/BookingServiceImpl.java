@@ -1,6 +1,8 @@
 package ru.practicum.shareit.booking.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +19,9 @@ import ru.practicum.shareit.exception.InternalServerError;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,21 +30,36 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
-    private final UserService userService;
-    private final ItemService itemService;
+    private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
+
+
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("User with id %d not found", userId)));
+    }
+
+    private Item getItemById(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException(String.format("Item with id %d not found", itemId)));
+    }
 
     @Override
     @Transactional
     public BookingDtoOutput create(BookingDtoInput bookingDto, Long userId) {
-        User booker = userService.getUserById(userId);
-        Item item = itemService.getItemById(bookingDto.getItemId());
+        Long itemId = bookingDto.getItemId();
+        Item item = getItemById(itemId);
+        User owner = item.getOwner();
+        if (owner == null) {
+            new AccessException(String.format("Item with id = %d not have owner.", itemId));
+        }
+        if (owner.getId().equals(userId)) {
+            throw new AccessException(String.format("Booker cannot be owner of item id: %d", userId));
+        }
         LocalDateTime start = bookingDto.getStart();
         LocalDateTime end = bookingDto.getEnd();
         if (end.isBefore(start) || end.equals(start)) {
             throw new ValidationException(String.format("Wrong booking time start = %s and end = %s", start, end));
-        }
-        if (itemService.getOwnerId(item.getId()).equals(userId)) {
-            throw new AccessException(String.format("Booker cannot be owner of item id: %d", userId));
         }
         if (!item.getAvailable()) {
             throw new ValidationException(String.format("Item with id: %d is not available!", userId));
@@ -51,7 +68,7 @@ public class BookingServiceImpl implements BookingService {
                 .start(start)
                 .end(end)
                 .item(item)
-                .booker(booker)
+                .booker(getUserById(userId))
                 .status(BookingStatus.WAITING)
                 .build();
         return BookingMapper.toBookingDtoOutput(bookingRepository.save(booking));
@@ -116,7 +133,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     @Override
     public List<BookingDtoOutput> getBookingsOfBooker(State state, Long bookerId) {
-        userService.getUserById(bookerId);
+        getUserById(bookerId);
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         List<Booking> bookings;
         switch (state) {
@@ -141,11 +158,10 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingDtoOutputs(bookings);
     }
 
-
     @Transactional(readOnly = true)
     @Override
     public List<BookingDtoOutput> getBookingsOfOwner(State state, Long ownerId) {
-        userService.getUserById(ownerId);
+        getUserById(ownerId);
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         List<Booking> bookings;
         switch (state) {
@@ -170,14 +186,23 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingDtoOutputs(bookings);
     }
 
-    public void setInItemLastAndNextBooking(Long itemId) {
-//TODO
-        //последний заказ Item:  последний заказ у которого start <= текущей даты или null
-        //следующий заказ Item: первый заказ у которого start >= текущего времени или null
-        LocalDateTime now = LocalDateTime.now();
-        bookingRepository.findFirstByItemIdAndStatus(itemId, BookingStatus.APPROVED,
-                Sort.by(Sort.Direction.DESC, "start"));
-
+    @Transactional(readOnly = true)
+    @Override
+    public BookingDtoOutput getLastBookingItem(long itemId) {
+        //последний заказ Item: последний заказ у которого start < текущей даты или null
+        Pageable page = PageRequest.of(0, 1, Sort.by("start").descending());
+        Booking booking = bookingRepository.getLastBookingByItemId(itemId,
+                BookingStatus.APPROVED, LocalDateTime.now(), page).getContent().stream().findFirst().orElse(null);
+        return BookingMapper.toBookingDtoOutput(booking);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public BookingDtoOutput getNextBookingItem(long itemId) {
+        //следующий заказ Item: первый заказ у которого start > текущего времени или null
+        Pageable page = PageRequest.of(0, 1, Sort.by("start").ascending());
+        Booking booking = bookingRepository.getNextBookingByItemId(itemId,
+                BookingStatus.APPROVED, LocalDateTime.now(), page).getContent().stream().findFirst().orElse(null);
+        return BookingMapper.toBookingDtoOutput(booking);
+    }
 }

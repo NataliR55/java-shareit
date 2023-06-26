@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import ru.practicum.shareit.booking.dto.BookingDtoOutput;
 import ru.practicum.shareit.booking.dto.BookingDtoShort;
 import ru.practicum.shareit.user.model.User;
 
@@ -16,11 +17,11 @@ import java.util.List;
 @Builder
 public class ItemDto {
     private Long id;
-    @NotBlank(message = "Fild name must be filled")
+    @NotBlank(message = "Name must be filled")
     private String name;
-    @NotBlank(message = "Fild description must be filled")
+    @NotBlank(message = "Description must be filled")
     private String description;
-    @NotNull(message = "Fild available must be filled")
+    @NotNull(message = "Available must be filled")
     private Boolean available;
     @JsonIgnore
     private User owner;

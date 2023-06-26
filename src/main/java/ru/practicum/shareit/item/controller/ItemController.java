@@ -54,8 +54,8 @@ public class ItemController {
 
     //добавление нового комментария на арендованную вещь(по itemId) может только арендатор уже бравший эту вещь
     @PostMapping("/{itemId}/comment")
-    public void addComment(@RequestHeader(userIdInHeader) long userId, @PathVariable long itemId,
+    public CommentDto addComment(@RequestHeader(userIdInHeader) long userId, @PathVariable long itemId,
                            @Valid @RequestBody CommentDto commentDto) {
-        itemService.addComment(userId, itemId, commentDto);
+        return itemService.addComment(userId, itemId, commentDto);
     }
 }

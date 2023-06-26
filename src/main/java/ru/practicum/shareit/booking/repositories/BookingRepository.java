@@ -1,5 +1,7 @@
 package ru.practicum.shareit.booking.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,7 +26,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByBookerIdAndStartAfter(long bookerId, LocalDateTime start, Sort sort);
 
     List<Booking> findAllByBookerIdAndEndBefore(long bookerId, LocalDateTime end, Sort sort);
-
 
     @Query(value = "select b from Booking b where b.booker.id = ?1 and b.start < ?2 and b.end > ?2 order by b.start desc")
     List<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(long bookerId, LocalDateTime dateTime);
@@ -52,9 +53,18 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByOwnerIdAndStartBeforeAndEndAfter(@Param("ownerId") Long ownerId,
                                                             @Param("dateTime") LocalDateTime dateTime);
 
-    List<Booking> findAllByItemIdAndStatus(long itemId, BookingStatus status, Sort sort);
+    List<Booking> findAllByItemIdAndStatus(long itemId, BookingStatus status);
 
-    List<Booking> findFirstByItemIdAndStatus(long itemId, BookingStatus status, Sort sort);
+    @Query(value = "select b from Booking b join b.item as i " +
+            " where i.id = :itemId and b.start < :dateTime and b.status = :status")
+    Page<Booking> getLastBookingByItemId(@Param("itemId") long itemId, @Param("status") BookingStatus status,
+                                         @Param("dateTime") LocalDateTime dateTime, Pageable page);
 
-    Optional<Booking> findFirstByItemIdAndStartBeforeAndStatus(long itemId, BookingStatus status, Sort sort);
+    @Query(value = "select b from Booking b join b.item as i " +
+            " where i.id = :itemId and b.start > :dateTime and b.status = :status")
+    Page<Booking> getNextBookingByItemId(@Param("itemId") long itemId, @Param("status") BookingStatus status,
+                                         @Param("dateTime") LocalDateTime dateTime, Pageable page);
+
+    Optional<Booking> findFirstByItemIdAndBookerIdAndStatusAndEndBefore(long itemId, long bookerId,
+                                                                             BookingStatus status, LocalDateTime end);
 }

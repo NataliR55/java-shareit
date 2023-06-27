@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BookingDtoInput {
+public class InputBookingDto {
     @NotNull
     private Long itemId;
     @NotNull(message = "Date must be filled!")

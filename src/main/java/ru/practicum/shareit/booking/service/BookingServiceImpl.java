@@ -1,17 +1,17 @@
-package ru.practicum.shareit.booking.services;
+package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ru.practicum.shareit.booking.dto.BookingDtoInput;
-import ru.practicum.shareit.booking.dto.BookingDtoOutput;
+import ru.practicum.shareit.booking.dto.InputBookingDto;
+import ru.practicum.shareit.booking.dto.OutputBookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.model.State;
-import ru.practicum.shareit.booking.repositories.BookingRepository;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.AccessException;
 import ru.practicum.shareit.exception.InternalServerError;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -43,7 +43,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingDtoOutput create(BookingDtoInput bookingDto, Long userId) {
+    public OutputBookingDto create(InputBookingDto bookingDto, Long userId) {
         Long itemId = bookingDto.getItemId();
         Item item = getItemById(itemId);
         User owner = item.getOwner();
@@ -68,12 +68,12 @@ public class BookingServiceImpl implements BookingService {
                 .booker(getUserById(userId))
                 .status(BookingStatus.WAITING)
                 .build();
-        return BookingMapper.toBookingDtoOutput(bookingRepository.save(booking));
+        return BookingMapper.toOutputBookingDto(bookingRepository.save(booking));
     }
 
     @Override
     @Transactional
-    public BookingDtoOutput approveBooking(Long bookingId, Long userId, Boolean approve) {
+    public OutputBookingDto approveBooking(Long bookingId, Long userId, Boolean approve) {
         Booking booking = getBookingById(bookingId, userId);
         if (booking.getStatus().equals(BookingStatus.APPROVED)) {
             throw new ValidationException(String.format("Booking with id: %d already have status %s",
@@ -83,10 +83,9 @@ public class BookingServiceImpl implements BookingService {
         BookingStatus bookingStatus = approve ? BookingStatus.APPROVED : BookingStatus.REJECTED;
         booking.setStatus(bookingStatus);
         bookingRepository.updateStatus(bookingStatus, bookingId);
-        return BookingMapper.toBookingDtoOutput(bookingRepository.save(booking));
+        return BookingMapper.toOutputBookingDto(bookingRepository.save(booking));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Booking getBookingById(Long bookingId, Long userId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -120,16 +119,15 @@ public class BookingServiceImpl implements BookingService {
                 userId, booking.getId()));
     }
 
-    @Transactional(readOnly = true)
     @Override
-    public BookingDtoOutput getBookingDtoById(Long bookingId, Long userId) {
+    public OutputBookingDto getBookingDtoById(Long bookingId, Long userId) {
         Booking booking = getBookingById(bookingId, userId);
-        return BookingMapper.toBookingDtoOutput(booking);
+        return BookingMapper.toOutputBookingDto(booking);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<BookingDtoOutput> getBookingsOfBooker(State state, Long bookerId) {
+    public List<OutputBookingDto> getBookingsOfBooker(State state, Long bookerId) {
         getUserById(bookerId);
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         List<Booking> bookings;
@@ -152,12 +150,12 @@ public class BookingServiceImpl implements BookingService {
             default:
                 bookings = bookingRepository.findAllByBookerId(bookerId, sort);
         }
-        return BookingMapper.toBookingDtoOutputs(bookings);
+        return BookingMapper.toOutputsBookingDtoList(bookings);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<BookingDtoOutput> getBookingsOfOwner(State state, Long ownerId) {
+    public List<OutputBookingDto> getBookingsOfOwner(State state, Long ownerId) {
         getUserById(ownerId);
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         List<Booking> bookings;
@@ -180,6 +178,6 @@ public class BookingServiceImpl implements BookingService {
             default:
                 bookings = bookingRepository.findAllByOwnerId(ownerId, sort);
         }
-        return BookingMapper.toBookingDtoOutputs(bookings);
+        return BookingMapper.toOutputsBookingDtoList(bookings);
     }
 }

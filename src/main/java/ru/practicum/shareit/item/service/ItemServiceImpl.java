@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.booking.repositories.BookingRepository;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.InternalServerError;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -137,14 +137,14 @@ public class ItemServiceImpl implements ItemService {
                 .filter(booking -> booking.getStart().isBefore(now))
                 .sorted(Comparator.comparing(Booking::getStart).reversed())
                 .limit(1)
-                .map(BookingMapper::toBookingDtoShort)
+                .map(BookingMapper::toShortBookingDto)
                 .findFirst().orElse(null));
         itemDto.setNextBooking(bookings.stream()
                 .filter(booking -> booking.getItem().getId().equals(itemId))
                 .filter(booking -> booking.getStart().isAfter(now))
                 .sorted(Comparator.comparing(Booking::getStart))
                 .limit(1)
-                .map(BookingMapper::toBookingDtoShort)
+                .map(BookingMapper::toShortBookingDto)
                 .findFirst().orElse(null));
     }
 

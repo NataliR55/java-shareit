@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import ru.practicum.shareit.booking.dto.BookingDtoShort;
+import ru.practicum.shareit.booking.dto.ShortBookingDto;
 import ru.practicum.shareit.user.model.User;
 
 import javax.validation.constraints.NotBlank;
@@ -26,7 +26,7 @@ public class ItemDto {
     private User owner;
     @JsonIgnore
     private Long request;
-    private BookingDtoShort lastBooking;
-    private BookingDtoShort nextBooking;
+    private ShortBookingDto lastBooking;
+    private ShortBookingDto nextBooking;
     private List<CommentDto> comments;
 }

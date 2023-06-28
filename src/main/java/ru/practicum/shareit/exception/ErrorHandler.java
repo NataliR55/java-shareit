@@ -39,6 +39,22 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleAccessException(final AccessException e) {
+        String strError = String.format("Access denied: %s", e.getMessage());
+        log.info(strError);
+        return new ErrorResponse(strError);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleArgumentException(final ArgumentException e) {
+        String strError = String.format("Bad Request: %s", e.getMessage());
+        log.info(strError);
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {
         String strError = String.format("Exception has occurred: %s", e.getMessage());

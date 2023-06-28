@@ -3,15 +3,13 @@ package ru.practicum.shareit.user.dto;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.*;
 
 @Data
 @Builder
 public class UserDto {
-    private long id;
-    @NotBlank
+    private Long id;
+    @NotBlank(message = "Field: Email must be filled!")
     @Pattern(regexp = "\\S+")
     private String name;
     @Email(message = "Field: Email must have the format EMAIL!")

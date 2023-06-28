@@ -34,7 +34,7 @@ public class UserController {
 
     @GetMapping("{id}")
     public UserDto getUser(@PathVariable(required = false) long id) {
-        return userService.getUserById(id);
+        return userService.getUserDtoById(id);
     }
 
     @GetMapping

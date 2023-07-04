@@ -23,7 +23,8 @@ public class ItemController {
 
     @PostMapping
     public ItemDto create(@RequestHeader(USER_ID_IN_HEADER) long ownerId, @Valid @RequestBody @NotNull ItemDto itemDto) {
-        return itemService.add(ownerId, ItemMapper.toItem(itemDto));
+
+        return itemService.add(ownerId, itemDto);
     }
 
     @PatchMapping("/{itemId}")

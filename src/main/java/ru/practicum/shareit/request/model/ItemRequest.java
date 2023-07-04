@@ -26,10 +26,9 @@ public class ItemRequest {
     private String description;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
-    private User requestor;
+    private User requester;
     @Column(name = "created")
     private LocalDateTime created;
     @Transient
     private List<Item> items;
-
 }

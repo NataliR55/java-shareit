@@ -4,11 +4,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.doThrow;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -41,4 +44,13 @@ class UserServiceImplTest {
     @Test
     void getAll() {
     }
+
+    @Test
+    void addUser_whenUserEmailNotValid_thenNotSaveUser(){
+//        User userTSave=new User();
+//        doThrow(ValidationException.class)
+//                .when(user)
+
+    }
+
 }

@@ -44,20 +44,19 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public List<ItemRequestDto> getUserRequests(Long userId, int from, int size) {
         getUserById(userId);
         return itemRequestsToDto(itemRequestRepository.findAllByRequesterIdOrderByCreatedDesc(userId
-                , pageRequest(from, size)));
+                , getPageRequest(from, size)));
     }
 
     @Override
     public List<ItemRequestDto> getOtherUserRequests(Long userId, int from, int size) {
         getUserById(userId);
-        return itemRequestsToDto(itemRequestRepository.findAllByRequesterIdIsNotEqualId(userId, pageRequest(from, size))
-                .getContent());
+        return itemRequestsToDto(itemRequestRepository.findAllByRequesterIdNot(userId, getPageRequest(from, size)));
     }
 
     @Override
     public ItemRequestDto getItemRequestById(Long userId, Long requestId) {
         getUserById(userId);
-        ItemRequest itemRequest = itemRequestRepository.getById(requestId);
+        ItemRequest itemRequest = getItemRequestById(requestId);
         return ItemRequestMapper.toItemRequestDto(itemRequest, itemRepository.findAllByRequestId(requestId));
     }
 
@@ -75,12 +74,19 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 .collect(Collectors.toList());
     }
 
-    private User getUserById(Long userId) {
+    public User getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User with id %d not found", userId)));
     }
 
-    private PageRequest pageRequest(int from, int size) {
+    private PageRequest getPageRequest(int from, int size) {
         return PageRequest.of(from > 0 ? from / size : 0, size, Sort.by(Sort.Direction.DESC, "created"));
     }
+
+    private ItemRequest getItemRequestById(Long id) {
+        return itemRequestRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("ItemRequest with id: %d is not found", id)));
+    }
+
+
 }

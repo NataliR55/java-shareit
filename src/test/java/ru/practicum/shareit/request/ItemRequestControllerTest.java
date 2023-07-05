@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,16 +37,16 @@ class ItemRequestControllerTest {
     private ObjectMapper mapper;
     @MockBean
     private ItemRequestService itemRequestService;
-    private final InputItemRequestDto inputItemRequestDto = new InputItemRequestDto("Description1");
+    private final InputItemRequestDto inputItemRequestDto = new InputItemRequestDto("Description11");
     private final ItemRequestDto itemRequestDto = ItemRequestDto.builder()
             .id(1L)
-            .description("description1")
-            .created(LocalDateTime.now())
+            .description(inputItemRequestDto.getDescription())
+            .created(LocalDateTime.now().plusHours(1))
             .items(null)
             .build();
 
     @Test
-    void createWithOk() throws Exception {
+    void createIsOk() throws Exception {
         when(itemRequestService.add(any(), anyLong())).thenReturn(itemRequestDto);
         mvc.perform(post("/requests")
                         .header(USER_ID_IN_HEADER, 1L)
@@ -53,15 +54,17 @@ class ItemRequestControllerTest {
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(itemRequestDto.getId()))
                 .andExpect(jsonPath("$.description").value(itemRequestDto.getDescription()))
                 .andExpect(jsonPath("$.items").value(itemRequestDto.getItems()))
                 .andExpect(jsonPath("$.created").value(itemRequestDto.getCreated().format(dateTimeFormatter)));
+        verify(itemRequestService).add(any(),anyLong());
     }
 
     @Test
-    void getUserRequestsWithOk() throws Exception {
+    void getUserRequestsIsOk() throws Exception {
         when(itemRequestService.getUserRequests(anyLong(), anyInt(), anyInt())).thenReturn(List.of(itemRequestDto));
         mvc.perform(get("/requests")
                         .header(USER_ID_IN_HEADER, 1L)
@@ -112,7 +115,7 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getOtherUsersRequestsWithOk() throws Exception {
+    void getOtherUsersRequestsIsOk() throws Exception {
         when(itemRequestService.getOtherUserRequests(anyLong(), anyInt(), anyInt())).thenReturn(List.of(itemRequestDto));
         mvc.perform(get("/requests/all")
                         .header(USER_ID_IN_HEADER, 1L)
@@ -143,7 +146,7 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getRequestByIdWithOk() throws Exception {
+    void getRequestByIdIsOk() throws Exception {
         when(itemRequestService.getItemRequestById(anyLong(), anyLong())).thenReturn(itemRequestDto);
         mvc.perform(get("/requests/{requestId}", 1L)
                         .header(USER_ID_IN_HEADER, 1L)

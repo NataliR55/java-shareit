@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -77,7 +76,7 @@ class ItemRequestServiceImplTest {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRequestRepository.findAllByRequesterIdOrderByCreatedDesc(anyLong(), any()))
                 .thenReturn(List.of(itemRequest));
-        when(itemRepository. findAllByRequestIdIn(any())).thenReturn(List.of());
+        when(itemRepository.findAllByRequestIdIn(any())).thenReturn(List.of());
         List<ItemRequestDto> actual = itemRequestService.getUserRequests(user.getId(), 1, 1);
         assertFalse(actual.isEmpty());
         assertEquals(1, actual.size());
@@ -85,6 +84,29 @@ class ItemRequestServiceImplTest {
         assertEquals(itemRequest.getDescription(), actual.get(0).getDescription());
         assertEquals(List.of(), actual.get(0).getItems());
     }
+    @Test
+    void getOtherUserRequestsWithOk() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        //when(itemRequestRepository.findAllByRequesterIdIsNotEqualId(anyLong(), any())).thenReturn((Page<ItemRequest>)List.of(itemRequest));
+        when(itemRequestRepository.findAllByRequesterIdNot(anyLong(), any())).thenReturn(List.of(itemRequest));
+        when(itemRepository.findAllByRequestIdIn(any())).thenReturn(List.of());
+        List<ItemRequestDto> actual = itemRequestService.getOtherUserRequests(user.getId(), 1, 1);
+        assertFalse(actual.isEmpty());
+        assertEquals(1, actual.size());
+        assertEquals(itemRequest.getId(), actual.get(0).getId());
+        assertEquals(itemRequest.getDescription(), actual.get(0).getDescription());
+        assertEquals(List.of(), actual.get(0).getItems());
 
+    }
+    @Test
+    void findByIdWithOk(){
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRequestRepository.findById(anyLong())).thenReturn(Optional.of(itemRequest));
+        ItemRequestDto actual = itemRequestService.getItemRequestById(user.getId(),itemRequest.getId());
+        assertEquals(1L, actual.getId());
+        assertEquals("itemRequest description1",actual.getDescription());
+        assertNotNull(actual.getCreated());
+        assertEquals(List.of(), actual.getItems());
+    }
 
 }

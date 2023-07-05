@@ -26,5 +26,4 @@ public class ItemRequestMapper {
                 .collect(Collectors.toList()));
         return itemRequestDto;
     }
-
 }

@@ -87,7 +87,6 @@ class ItemRequestServiceImplTest {
     @Test
     void getOtherUserRequestsWithOk() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
-        //when(itemRequestRepository.findAllByRequesterIdIsNotEqualId(anyLong(), any())).thenReturn((Page<ItemRequest>)List.of(itemRequest));
         when(itemRequestRepository.findAllByRequesterIdNot(anyLong(), any())).thenReturn(List.of(itemRequest));
         when(itemRepository.findAllByRequestIdIn(any())).thenReturn(List.of());
         List<ItemRequestDto> actual = itemRequestService.getOtherUserRequests(user.getId(), 1, 1);

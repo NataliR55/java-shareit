@@ -14,13 +14,11 @@ public interface ItemService {
 
     Item getItemById(Long itemId);
 
-    Long getOwnerId(Long itemId);
-
     ItemDto getItemDtoById(Long itemId, Long userId);
 
-    List<ItemDto> getAllUserItems(Long userId);
+    List<ItemDto> getAllUserItems(Long userId, int from, int size);
 
-    List<ItemDto> searchItems(Long userId, String query);
+    List<ItemDto> searchItems(String query, int from, int size);
 
     void delete(Long ownerId, Long itemId);
 

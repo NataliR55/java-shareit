@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +22,11 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -53,17 +53,21 @@ public class ItemServiceImpl implements ItemService {
         User owner = getUserById(ownerId);
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
-        item.setRequest(itemDto.getRequestId() == null ? null : itemRequestRepository.getById(itemDto.getRequestId()));
+        if (itemDto.getRequestId() != null) {
+            Long requestId = itemDto.getRequestId();
+            item.setRequest(itemRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new NotFoundException(
+                            String.format("Request with id:%s is not found ", requestId))));
+        }
         return ItemMapper.toItemDto(itemRepository.save(item));
     }
 
     @Transactional
     @Override
     public ItemDto update(Long ownerId, Long itemId, Map<String, String> updates) {
+        getUserById(ownerId);
         Item item = getItemById(itemId);
-        if (!getOwnerId(itemId).equals(ownerId)) {
-            throw new NotFoundException(String.format("User with id:%s is not owner Item with id: %s", ownerId, itemId));
-        }
+        checkOwnerOfItem(ownerId, item);
         if (updates.containsKey("name")) {
             String value = updates.get("name");
             checkString(value, "Name");
@@ -81,13 +85,13 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toItemDto(itemRepository.save(item));
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Long getOwnerId(Long itemId) {
-        Item item = getItemById(itemId);
+    private void checkOwnerOfItem(Long ownerId, Item item) {
         User owner = item.getOwner();
         if (owner == null) throw new InternalServerError("Item with id = %d not have owner!");
-        return owner.getId();
+        if (!owner.getId().equals(ownerId)) {
+            throw new NotFoundException(String.format("User with id:%s is not owner Item with id: %s", ownerId
+                    , item.getId()));
+        }
     }
 
     private void checkString(String value, String name) {
@@ -120,8 +124,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<ItemDto> getAllUserItems(Long userId) {
-        List<Item> items = itemRepository.findAllByOwnerId(userId);
+    public List<ItemDto> getAllUserItems(Long userId, int from, int size) {
+        Pageable pageable = PageRequest.of(from / size, size);
+        getUserById(userId);
+        List<Item> items = itemRepository.findAllByOwnerId(userId, pageable);
         List<Booking> bookings = bookingRepository.findAllByOwnerIdAndStatus(userId, BookingStatus.APPROVED);
         List<Comment> comments = commentRepository.findAllByItemIdIn(items.stream()
                 .map(Item::getId)
@@ -164,11 +170,9 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public void delete(Long ownerId, Long itemId) {
+        getUserById(ownerId);
         Item item = getItemById(itemId);
-        if (!getOwnerId(itemId).equals(ownerId)) {
-            throw new NotFoundException(String.format("User with id:%d is not owner Item with id:%d not found.",
-                    ownerId, itemId));
-        }
+        checkOwnerOfItem(ownerId, item);
         itemRepository.delete(item);
     }
 
@@ -179,11 +183,9 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItems(Long userId, String query) {
-        if (query == null || query.isBlank()) {
-            return Collections.emptyList();
-        }
-        return ItemMapper.toItemDtoList(itemRepository.searchAvailableItems(query));
+    public List<ItemDto> searchItems(String query, int from, int size) {
+        Pageable pageable = PageRequest.of(from / size, size);
+        return ItemMapper.toItemDtoList(itemRepository.searchAvailableItems(query, pageable));
     }
 
     @Transactional

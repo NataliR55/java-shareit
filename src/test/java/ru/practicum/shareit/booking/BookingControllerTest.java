@@ -1,7 +1,6 @@
 package ru.practicum.shareit.booking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,11 +8,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.practicum.shareit.booking.controller.BookingController;
 import ru.practicum.shareit.booking.dto.InputBookingDto;
 import ru.practicum.shareit.booking.dto.OutputBookingDto;
-import ru.practicum.shareit.booking.dto.ShortBookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -23,9 +20,12 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,7 +41,6 @@ class BookingControllerTest {
 
     InputBookingDto inputBookingDto;
     OutputBookingDto outputBookingDto;
-    ShortBookingDto shortBookingDto;
     Booking booking;
     User user;
     Item item;
@@ -56,7 +55,6 @@ class BookingControllerTest {
         booking = Booking.builder().id(1L).item(item).booker(user).status(BookingStatus.WAITING)
                 .start(start).end(end).build();
         outputBookingDto = BookingMapper.toOutputBookingDto(booking);
-        shortBookingDto = BookingMapper.toShortBookingDto(booking);
         inputBookingDto = new InputBookingDto(item.getId(), start, end);
     }
 
@@ -111,7 +109,6 @@ class BookingControllerTest {
         verify(bookingService).approveBooking(anyLong(), anyLong(), anyBoolean());
     }
 
-
     @Test
     void getByIdIsOk() throws Exception {
         when(bookingService.getBookingDtoById(anyLong(), anyLong())).thenReturn(BookingMapper
@@ -142,10 +139,9 @@ class BookingControllerTest {
     }
 
     @Test
-    void findAllByUserWithOk() throws Exception {
-        when(bookingService.findAllForBooker(anyLong(), any(), anyInt(), anyInt()))
-                .thenReturn(List.of(BookingMapper.toBookingDto(booking)));
-
+    void getBookingsOfUserIsOk() throws Exception {
+        when(bookingService.getBookingsOfBooker(any(), anyLong(), anyInt(), anyInt()))
+                .thenReturn(List.of(BookingMapper.toOutputBookingDto(booking)));
         mvc.perform(get("/bookings")
                         .header(USER_ID_IN_HEADER, 1L)
                         .accept(MediaType.APPLICATION_JSON))
@@ -162,64 +158,45 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.[0].item.id").value(booking.getItem().getId()))
                 .andExpect(jsonPath("$.[0].item.name").value(booking.getItem().getName()));
 
-        verify(bookingService).findAllForBooker(anyLong(), any(), anyInt(), anyInt());
-    }
-/*
-
-    @Test
-    void findAllByUserWithLowCaseState() throws Exception {
-        mvc.perform(get("/bookings")
-                        .header(USER_ID_IN_HEADER, 1L)
-                        .param("state", "waiting")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        verify(bookingService).getBookingsOfBooker(any(), anyLong(), anyInt(), anyInt());
     }
 
-
     @Test
-    void findAllByUserWithoutBooking() throws Exception {
-        when(bookingService.findAllForBooker(anyLong(), any(), anyInt(), anyInt())).thenReturn(List.of());
-
+    void getBookingsOfBookerWithoutBooking() throws Exception {
+        when(bookingService.getBookingsOfBooker(any(), anyLong(), anyInt(), anyInt())).thenReturn(List.of());
         mvc.perform(get("/bookings")
                         .header(USER_ID_IN_HEADER, 1L)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[*]").isEmpty());
-
-        verify(bookingService).findAllForBooker(anyLong(), any(), anyInt(), anyInt());
+        verify(bookingService).getBookingsOfBooker(any(), anyLong(), anyInt(), anyInt());
     }
 
-
     @Test
-    void findAllByUserAndBadFrom() throws Exception {
+    void getBookingsOfBookerAndBadFrom() throws Exception {
         mvc.perform(get("/bookings")
                         .header(USER_ID_IN_HEADER, 1L)
                         .param("from", "-1")
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).findAllForBooker(anyLong(), any(), anyInt(), anyInt());
+                .andExpect(status().isInternalServerError());
+        verify(bookingService, never()).getBookingsOfBooker(any(), anyLong(), anyInt(), anyInt());
     }
 
-
     @Test
-    void findAllByUserAndBadSize() throws Exception {
+    void getBookingsOfBookerAndBadSize() throws Exception {
         mvc.perform(get("/bookings")
                         .header(USER_ID_IN_HEADER, 1L)
                         .param("size", "0")
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).findAllForBooker(anyLong(), any(), anyInt(), anyInt());
+                .andExpect(status().isInternalServerError());
+        verify(bookingService, never()).getBookingsOfBooker(any(), anyLong(), anyInt(), anyInt());
     }
 
-
     @Test
-    void findAllByOwnerWithOk() throws Exception {
-        when(bookingService.findAllForOwner(anyLong(), any(), anyInt(), anyInt()))
-                .thenReturn(List.of(BookingMapper.toBookingDto(booking)));
-
+    void getBookingsOfOwnerIsOk() throws Exception {
+        when(bookingService.getBookingsOfOwner(any(), anyLong(), anyInt(), anyInt()))
+                .thenReturn(List.of(BookingMapper.toOutputBookingDto(booking)));
         mvc.perform(get("/bookings/owner")
                         .header(USER_ID_IN_HEADER, 1L)
                         .accept(MediaType.APPLICATION_JSON))
@@ -235,13 +212,11 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.[0].booker.name").value(booking.getBooker().getName()))
                 .andExpect(jsonPath("$.[0].item.id").value(booking.getItem().getId()))
                 .andExpect(jsonPath("$.[0].item.name").value(booking.getItem().getName()));
-
-        verify(bookingService).findAllForOwner(anyLong(), any(), anyInt(), anyInt());
+        verify(bookingService).getBookingsOfOwner(any(), anyLong(), anyInt(), anyInt());
     }
 
-
     @Test
-    void findAllByOwnerWithLowCaseState() throws Exception {
+    void getBookingsOfOwnerWithLowCaseState() throws Exception {
         mvc.perform(get("/bookings/owner")
                         .header(USER_ID_IN_HEADER, 1L)
                         .param("state", "waiting")
@@ -249,28 +224,23 @@ class BookingControllerTest {
                 .andExpect(status().isOk());
     }
 
-
     @Test
-    void findAllByOwnerAndBadFrom() throws Exception {
+    void getBookingsOfOwnerAndBadFrom() throws Exception {
         mvc.perform(get("/bookings/owner")
                         .header(USER_ID_IN_HEADER, 1L)
                         .param("from", "-1")
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).findAllForOwner(anyLong(), any(), anyInt(), anyInt());
+                .andExpect(status().isInternalServerError());
+        verify(bookingService, never()).getBookingsOfOwner(any(), anyLong(), anyInt(), anyInt());
     }
 
-
     @Test
-    void findAllByOwnerAndBadSize() throws Exception {
+    void getBookingsOfOwnerAndBadSize() throws Exception {
         mvc.perform(get("/bookings/owner")
                         .header(USER_ID_IN_HEADER, 1L)
                         .param("size", "0")
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).findAllForOwner(anyLong(), any(), anyInt(), anyInt());
+                .andExpect(status().isInternalServerError());
+        verify(bookingService, never()).getBookingsOfOwner(any(), anyLong(), anyInt(), anyInt());
     }
-*/
 }

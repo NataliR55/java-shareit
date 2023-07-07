@@ -9,6 +9,8 @@ import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
@@ -27,8 +29,8 @@ public class BookingController {
 
     @PatchMapping("/{bookingId}")
     public OutputBookingDto approveBooking(@RequestHeader(USER_ID_IN_HEADER) Long userId,
-                                   @PathVariable Long bookingId,
-                                   @RequestParam boolean approved) {
+                                           @PathVariable Long bookingId,
+                                           @RequestParam boolean approved) {
         return bookingService.approveBooking(bookingId, userId, approved);
     }
 
@@ -38,14 +40,18 @@ public class BookingController {
     }
 
     @GetMapping
-    public List<OutputBookingDto> getBookingsOfUser(@RequestHeader(USER_ID_IN_HEADER) Long userId,
-                                                    @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.getBookingsOfBooker(State.getState(state), userId);
+    public List<OutputBookingDto> getBookingsOfBooker(@RequestHeader(USER_ID_IN_HEADER) Long userId,
+                                                    @RequestParam(required = false, defaultValue = "ALL") String state,
+                                                    @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                    @RequestParam(defaultValue = "30") @Positive int size) {
+        return bookingService.getBookingsOfBooker(State.getState(state), userId, from, size);
     }
 
     @GetMapping("/owner")
     public List<OutputBookingDto> getBookingsOfOwner(@RequestHeader(USER_ID_IN_HEADER) Long userId,
-                                                     @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.getBookingsOfOwner(State.getState(state), userId);
+                                                     @RequestParam(defaultValue = "ALL") String state,
+                                                     @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                     @RequestParam(defaultValue = "20") @Positive int size) {
+        return bookingService.getBookingsOfOwner(State.getState(state), userId, from, size);
     }
 }

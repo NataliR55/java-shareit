@@ -36,7 +36,7 @@ class BookingRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10, BookingRepository.SORT_BY_START_BY_DESC);
 
     @BeforeEach
-    void BeforeEach() {
+    void beforeEach() {
         user1 = User.builder().id(1L).name("user1").email("user1@mail.ru").build();
         user2 = User.builder().id(2L).name("user2").email("user2@mail.ru").build();
         user3 = User.builder().id(3L).name("user3").email("user3@mail.ru").build();

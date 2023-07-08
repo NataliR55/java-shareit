@@ -47,7 +47,7 @@ class BookingServiceImplTest {
     Item item;
 
     @BeforeEach
-    void BeforeEach() {
+    void beforeEach() {
         LocalDateTime start = LocalDateTime.now().plusMinutes(1);
         LocalDateTime end = LocalDateTime.now().plusMinutes(30);
         user = User.builder().id(1L).name("user1").email("user1@mail.ru").build();

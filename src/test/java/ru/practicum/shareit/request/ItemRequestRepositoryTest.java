@@ -51,8 +51,8 @@ class ItemRequestRepositoryTest {
     @Test
     void findAllByRequesterIdOrderByCreatedDescIsOk() {
         PageRequest page = PageRequest.of(0, 10, sort);
-        List<ItemRequest> itemRequests = itemRequestRepository.findAllByRequesterIdOrderByCreatedDesc(user1.getId()
-                , page);
+        List<ItemRequest> itemRequests = itemRequestRepository.findAllByRequesterIdOrderByCreatedDesc(user1.getId(),
+                page);
         assertEquals(3, itemRequests.size());
         assertEquals(itemRequest2.getDescription(), itemRequests.get(0).getDescription());
         assertEquals(4, itemRequestRepository.findAll().size());
@@ -61,8 +61,8 @@ class ItemRequestRepositoryTest {
     @Test
     void findAllByRequesterIdOrderByCreatedDesc_testPage() {
         PageRequest page = PageRequest.of(0, 2, sort);
-        List<ItemRequest> itemRequests = itemRequestRepository.findAllByRequesterIdOrderByCreatedDesc(user1.getId()
-                , page);
+        List<ItemRequest> itemRequests = itemRequestRepository.findAllByRequesterIdOrderByCreatedDesc(user1.getId(),
+                page);
         assertEquals(2, itemRequests.size());
         assertEquals(itemRequest2.getDescription(), itemRequests.get(0).getDescription());
         assertEquals(4, itemRequestRepository.findAll().size());

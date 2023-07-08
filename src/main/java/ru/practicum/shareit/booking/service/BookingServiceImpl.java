@@ -3,7 +3,6 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -109,11 +108,11 @@ public class BookingServiceImpl implements BookingService {
         if (item == null) {
             throw new InternalServerError(String.format("Booking with id: %s Item is not installed!", booker.getId()));
         }
-        User ItemOwner = item.getOwner();
-        if (ItemOwner == null) {
+        User itemOwner = item.getOwner();
+        if (itemOwner == null) {
             throw new InternalServerError(String.format("Booking with id: %s Owner is not installed!", booker.getId()));
         }
-        return ItemOwner.getId();
+        return itemOwner.getId();
     }
 
     @Override

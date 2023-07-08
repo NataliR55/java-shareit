@@ -43,8 +43,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public List<ItemRequestDto> getUserRequests(Long userId, int from, int size) {
         getUserById(userId);
-        return itemRequestsToDto(itemRequestRepository.findAllByRequesterIdOrderByCreatedDesc(userId
-                , getPageRequest(from, size)));
+        return itemRequestsToDto(itemRequestRepository.findAllByRequesterIdOrderByCreatedDesc(userId,
+                getPageRequest(from, size)));
     }
 
     @Override

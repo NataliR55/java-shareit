@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class ItemServiceImpl implements ItemService {
-    private final Sort SORT_BY_CREATED_IN_ASC = Sort.by(Sort.Direction.ASC, "created");
+    private final Sort sort = Sort.by(Sort.Direction.ASC, "created");
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
@@ -90,8 +90,8 @@ public class ItemServiceImpl implements ItemService {
         User owner = item.getOwner();
         if (owner == null) throw new InternalServerError("Item with id = %d not have owner!");
         if (!owner.getId().equals(ownerId)) {
-            throw new NotFoundException(String.format("User with id:%s is not owner Item with id: %s", ownerId
-                    , item.getId()));
+            throw new NotFoundException(String.format("User with id:%s is not owner Item with id: %s", ownerId,
+                    item.getId()));
         }
     }
 
@@ -113,12 +113,12 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItemDtoById(Long itemId, Long userId) {
         Item item = getItemById(itemId);
-        List<Comment> comments = commentRepository.findAllByItemId(item.getId(), SORT_BY_CREATED_IN_ASC);
+        List<Comment> comments = commentRepository.findAllByItemId(item.getId(), sort);
         ItemDto itemDto = ItemMapper.toItemDto(item);
         if (item.getOwner() != null && item.getOwner().getId().equals(userId)) {
             setBookings(itemDto,
                     bookingRepository.findAllByItemIdAndStatus(itemId, BookingStatus.APPROVED,
-                    PageRequest.of(0, 10000, BookingRepository.SORT_BY_START_BY_DESC)));
+                            PageRequest.of(0, 10000, BookingRepository.SORT_BY_START_BY_DESC)));
         }
         setComments(itemDto, comments);
         return itemDto;
@@ -133,7 +133,7 @@ public class ItemServiceImpl implements ItemService {
         List<Booking> bookings = bookingRepository.findAllByOwnerIdAndStatus(userId, BookingStatus.APPROVED, pageable);
         List<Comment> comments = commentRepository.findAllByItemIdIn(items.stream()
                 .map(Item::getId)
-                .collect(Collectors.toList()), SORT_BY_CREATED_IN_ASC);
+                .collect(Collectors.toList()), sort);
         List<ItemDto> itemsDto = ItemMapper.toItemDtoList(items);
         itemsDto.forEach(i -> {
             setBookings(i, bookings);

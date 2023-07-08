@@ -37,6 +37,7 @@ class ItemRequestServiceImplTest {
     ItemRepository itemRepository;
     @InjectMocks
     ItemRequestServiceImpl itemRequestService;
+
     User user;
     Item item;
     ItemRequest itemRequest;
@@ -84,6 +85,7 @@ class ItemRequestServiceImplTest {
         assertEquals(itemRequest.getDescription(), actual.get(0).getDescription());
         assertEquals(List.of(), actual.get(0).getItems());
     }
+
     @Test
     void getOtherUserRequestsWithOk() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
@@ -95,17 +97,16 @@ class ItemRequestServiceImplTest {
         assertEquals(itemRequest.getId(), actual.get(0).getId());
         assertEquals(itemRequest.getDescription(), actual.get(0).getDescription());
         assertEquals(List.of(), actual.get(0).getItems());
-
     }
+
     @Test
-    void findByIdWithOk(){
+    void findByIdWithOk() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRequestRepository.findById(anyLong())).thenReturn(Optional.of(itemRequest));
-        ItemRequestDto actual = itemRequestService.getItemRequestById(user.getId(),itemRequest.getId());
+        ItemRequestDto actual = itemRequestService.getItemRequestById(user.getId(), itemRequest.getId());
         assertEquals(1L, actual.getId());
-        assertEquals("itemRequest description1",actual.getDescription());
+        assertEquals("itemRequest description1", actual.getDescription());
         assertNotNull(actual.getCreated());
         assertEquals(List.of(), actual.getItems());
     }
-
 }

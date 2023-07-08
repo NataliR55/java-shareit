@@ -1,13 +1,11 @@
 package ru.practicum.shareit.item;
 
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
@@ -21,10 +19,8 @@ class ItemDtoTest {
     @Autowired
     private JacksonTester<ItemDto> json;
 
-
-    @SneakyThrows
     @Test
-    void testItemInDto(){
+    void testItemInDto() throws Exception {
         User user = User.builder().id(1L).name("user1").email("user1@mail.ru").build();
         ItemRequest itemRequest = ItemRequest.builder().id(1L).created(LocalDateTime.now().plusMinutes(10))
                 .description("itemRequest Description").requester(user).items(List.of()).build();
@@ -43,6 +39,4 @@ class ItemDtoTest {
         assertThat(result).extractingJsonPathBooleanValue("$.available").isEqualTo(itemDto.getAvailable());
         assertThat(result).extractingJsonPathNumberValue("$.requestId").isEqualTo(1);
     }
-
-
 }

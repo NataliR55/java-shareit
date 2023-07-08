@@ -16,10 +16,6 @@ import java.util.Optional;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     Sort SORT_BY_START_BY_DESC = Sort.by(Sort.Direction.DESC, "start");
 
-//    @Modifying
-//    @Query("UPDATE Booking b SET b.status = :status WHERE b.id = :bookingId")
-//    void updateStatus(@Param("status") BookingStatus status, @Param("bookingId") Long bookingId);
-
     List<Booking> findAllByBookerId(long bookerId, Pageable pageable);
 
     List<Booking> findAllByBookerIdAndStatus(long bookerId, BookingStatus status, Pageable pageable);
@@ -32,7 +28,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(long bookerId, LocalDateTime dateTime, Pageable pageable);
 
     @Query(value = "select b from Booking b join fetch b.item as i join fetch i.owner as o " +
-            " where o.id = :ownerId")
+            " where o.id = :ownerId ")
     List<Booking> findAllByOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
 
     @Query(value = "select b from Booking b join fetch b.item as i join fetch i.owner as o " +

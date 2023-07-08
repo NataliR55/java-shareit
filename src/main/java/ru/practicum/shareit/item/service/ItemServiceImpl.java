@@ -116,7 +116,8 @@ public class ItemServiceImpl implements ItemService {
         List<Comment> comments = commentRepository.findAllByItemId(item.getId(), SORT_BY_CREATED_IN_ASC);
         ItemDto itemDto = ItemMapper.toItemDto(item);
         if (item.getOwner() != null && item.getOwner().getId().equals(userId)) {
-            setBookings(itemDto, bookingRepository.findAllByItemIdAndStatus(itemId, BookingStatus.APPROVED,
+            setBookings(itemDto,
+                    bookingRepository.findAllByItemIdAndStatus(itemId, BookingStatus.APPROVED,
                     PageRequest.of(0, 10000, BookingRepository.SORT_BY_START_BY_DESC)));
         }
         setComments(itemDto, comments);
@@ -126,9 +127,9 @@ public class ItemServiceImpl implements ItemService {
     @Transactional(readOnly = true)
     @Override
     public List<ItemDto> getAllUserItems(Long userId, int from, int size) {
-        Pageable pageable = PageRequest.of(from / size, size, BookingRepository.SORT_BY_START_BY_DESC);
         getUserById(userId);
-        List<Item> items = itemRepository.findAllByOwnerId(userId, pageable);
+        List<Item> items = itemRepository.findAllByOwnerId(userId, PageRequest.of(from / size, size));
+        Pageable pageable = PageRequest.of(from / size, size, BookingRepository.SORT_BY_START_BY_DESC);
         List<Booking> bookings = bookingRepository.findAllByOwnerIdAndStatus(userId, BookingStatus.APPROVED, pageable);
         List<Comment> comments = commentRepository.findAllByItemIdIn(items.stream()
                 .map(Item::getId)

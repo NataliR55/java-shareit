@@ -119,6 +119,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public OutputBookingDto getBookingDtoById(Long bookingId, Long userId) {
         Booking booking = getBookingById(bookingId, userId);
+        getUserById(userId);
         Long itemOwnerId = getItemOwnerId(booking);
         Long bookerId = booking.getBooker().getId();
         if (!((bookerId.equals(userId)) || (itemOwnerId.equals(userId)))) {

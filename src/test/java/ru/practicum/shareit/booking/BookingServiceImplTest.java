@@ -10,9 +10,10 @@ import ru.practicum.shareit.booking.dto.InputBookingDto;
 import ru.practicum.shareit.booking.dto.OutputBookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.service.BookingServiceImpl;
+import ru.practicum.shareit.exception.AccessException;
+import ru.practicum.shareit.exception.ArgumentException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
@@ -83,6 +84,43 @@ class BookingServiceImplTest {
     }
 
     @Test
+    void createWithoutUser() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> bookingService.create(inputBookingDto, user.getId()));
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void createWithOwnerNull() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user2));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        item.setOwner(null);
+        assertThrows(AccessException.class, () -> bookingService.create(inputBookingDto, user2.getId()));
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void createWithBadUser() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        assertThrows(AccessException.class, () -> bookingService.create(inputBookingDto, user.getId()));
+        verify(userRepository).findById(anyLong());
+        verify(itemRepository).findById(anyLong());
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void createWithBadTime() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user2));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        inputBookingDto.setEnd(inputBookingDto.getStart().minusMinutes(10));
+        assertThrows(ValidationException.class, () -> bookingService.create(inputBookingDto, user2.getId()));
+        verify(userRepository).findById(anyLong());
+        verify(itemRepository).findById(anyLong());
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
     void createItemEmpty() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
@@ -94,9 +132,8 @@ class BookingServiceImplTest {
     void createAvailableFalse() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
-        item.setOwner(User.builder().id(2L).build());
         item.setAvailable(false);
-        assertThrows(ValidationException.class, () -> bookingService.create(inputBookingDto, user.getId()));
+        assertThrows(ValidationException.class, () -> bookingService.create(inputBookingDto, user2.getId()));
         verify(bookingRepository, never()).save(any());
     }
 
@@ -124,6 +161,16 @@ class BookingServiceImplTest {
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
         booking.setStatus(BookingStatus.APPROVED);
         assertThrows(ValidationException.class, () -> bookingService.approveBooking(booking.getId(), user.getId(), true));
+        verify(userRepository).findById(anyLong());
+        verify(bookingRepository).findById(anyLong());
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void approveBookingUserNotOwner() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user2));
+        when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
+        assertThrows(AccessException.class, () -> bookingService.approveBooking(booking.getId(), user2.getId(), true));
         verify(userRepository).findById(anyLong());
         verify(bookingRepository).findById(anyLong());
         verify(bookingRepository, never()).save(any());
@@ -160,6 +207,14 @@ class BookingServiceImplTest {
     }
 
     @Test
+    void getBookingByIdIncorrectUser() {
+        when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user3));
+        assertThrows(AccessException.class, () -> bookingService.getBookingDtoById(booking.getId(), user3.getId()));
+        verify(bookingRepository).findById(anyLong());
+    }
+
+    @Test
     void getBookingsOfBookerOk() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         List<Booking> bookings = List.of(booking);
@@ -170,12 +225,20 @@ class BookingServiceImplTest {
         when(bookingRepository.findAllByBookerIdAndStartAfter(anyLong(), any(), any())).thenReturn(bookings);
         when(bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfter(anyLong(), any(), any())).thenReturn(bookings);
         Long bookerId = booking.getBooker().getId();
-        assertEquals(1, bookingService.getBookingsOfBooker(State.ALL, bookerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfBooker(State.WAITING, bookerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfBooker(State.REJECTED, bookerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfBooker(State.CURRENT, bookerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfBooker(State.PAST, bookerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfBooker(State.FUTURE, bookerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfBooker("ALL", bookerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfBooker("WAITING", bookerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfBooker("REJECTED", bookerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfBooker("CURRENT", bookerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfBooker("PAST", bookerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfBooker("FUTURE", bookerId, 0, 10).size());
+    }
+
+    @Test
+    void getBookingsOfBookerWithBadState() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        assertThrows(ArgumentException.class, () -> bookingService.getBookingsOfBooker("Cherry", user.getId(),
+                0, 10));
+        verify(userRepository).findById(anyLong());
     }
 
     @Test
@@ -188,11 +251,19 @@ class BookingServiceImplTest {
         when(bookingRepository.findAllByOwnerIdAndStartBeforeAndEndAfter(anyLong(), any(), any())).thenReturn(bookings);
         when(bookingRepository.findAllByOwnerId(anyLong(), any())).thenReturn(bookings);
         Long ownerId = booking.getItem().getOwner().getId();
-        assertEquals(1, bookingService.getBookingsOfOwner(State.ALL, ownerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfOwner(State.WAITING, ownerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfOwner(State.REJECTED, ownerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfOwner(State.CURRENT, ownerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfOwner(State.PAST, ownerId, 0, 10).size());
-        assertEquals(1, bookingService.getBookingsOfOwner(State.FUTURE, ownerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfOwner("ALL", ownerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfOwner("WAITING", ownerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfOwner("REJECTED", ownerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfOwner("CURRENT", ownerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfOwner("PAST", ownerId, 0, 10).size());
+        assertEquals(1, bookingService.getBookingsOfOwner("FUTURE", ownerId, 0, 10).size());
+    }
+
+    @Test
+    void getBookingsOfOwnerWithBadState() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        assertThrows(ArgumentException.class, () -> bookingService.getBookingsOfOwner("Cherry", user.getId(),
+                0, 10));
+        verify(userRepository).findById(anyLong());
     }
 }

@@ -255,5 +255,4 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.created").isNotEmpty());
         verify(itemService).addComment(anyLong(), anyLong(), any(CommentDto.class));
     }
-
 }

@@ -130,8 +130,9 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<OutputBookingDto> getBookingsOfBooker(State state, Long bookerId, int from, int size) {
+    public List<OutputBookingDto> getBookingsOfBooker(String stateText, Long bookerId, int from, int size) {
         getUserById(bookerId);
+        State state = State.getState(stateText);
         Pageable pageable = PageRequest.of(size == 0 ? 0 : from / size, size, BookingRepository.SORT_BY_START_BY_DESC);
         List<Booking> bookings;
         switch (state) {
@@ -159,8 +160,9 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<OutputBookingDto> getBookingsOfOwner(State state, Long ownerId, int from, int size) {
+    public List<OutputBookingDto> getBookingsOfOwner(String stateText, Long ownerId, int from, int size) {
         getUserById(ownerId);
+        State state = State.getState(stateText);
         Pageable pageable = PageRequest.of(size == 0 ? 0 : from / size, size, BookingRepository.SORT_BY_START_BY_DESC);
         List<Booking> bookings;
         switch (state) {

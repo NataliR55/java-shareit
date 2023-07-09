@@ -11,7 +11,7 @@ import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
-import ru.practicum.shareit.exception.InternalServerError;
+
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
@@ -88,8 +88,7 @@ public class ItemServiceImpl implements ItemService {
 
     private void checkOwnerOfItem(Long ownerId, Item item) {
         User owner = item.getOwner();
-        if (owner == null) throw new InternalServerError("Item with id = %d not have owner!");
-        if (!owner.getId().equals(ownerId)) {
+        if ((owner == null) || (!owner.getId().equals(ownerId))) {
             throw new NotFoundException(String.format("User with id:%s is not owner Item with id: %s", ownerId,
                     item.getId()));
         }

@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -136,7 +137,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
-        verify(userService, never()).update(anyLong(),any());
+        verify(userService, never()).update(anyLong(), any());
     }
 
     @Test
@@ -196,5 +197,14 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[*]").isEmpty());
         verify(userService).getAll();
+    }
+
+    @Test
+    void deleteIsOk() throws Exception {
+        mvc.perform(delete("/users/1"))
+                .andDo(print())
+                .andExpectAll(
+                        status().isOk());
+        verify(userService).delete(1L);
     }
 }

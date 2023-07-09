@@ -8,15 +8,14 @@ import org.mockito.Mock;
 
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -63,6 +62,30 @@ class UserServiceImplTest {
         when(userRepository.findById(anyLong())).thenThrow(new NotFoundException(""));
         assertThrows(NotFoundException.class, () -> userService.update(anyLong(), newUser));
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void patchUpdateWithIncorrectField() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        Map<String, String> fieldsUpdate = new HashMap<>();
+        fieldsUpdate.put("surname", "Pedro");
+        assertThrows(ValidationException.class, () -> userService.patchUpdate(user.getId(), fieldsUpdate));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void getUserDtoByIdIsOk() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        UserDto userDto = userService.getUserDtoById(user.getId());
+        assertEquals(userDto.getName(), user.getName());
+        verify(userRepository).findById(anyLong());
+    }
+
+    @Test
+    void getUserDtoByIdWithIncorrectId() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> userService.getUserDtoById(0L));
+        verify(userRepository).findById(anyLong());
     }
 
     @Test

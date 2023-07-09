@@ -52,7 +52,7 @@ class ItemServiceImplTest {
     ItemRequestRepository itemRequestRepository;
     @InjectMocks
     ItemServiceImpl itemService;
-    User user;
+    User user, user2;
     Item item;
     ItemDto itemDto;
     Comment comment;
@@ -62,6 +62,7 @@ class ItemServiceImplTest {
     @BeforeEach
     void beforeEach() {
         user = User.builder().id(1L).name("user1").email("user1@mail.ru").build();
+        user2 = User.builder().id(2L).name("user2").email("user2@mail.ru").build();
         item = Item.builder().id(1L).name("item1").description("itemDescription1").available(true)
                 .owner(user).request(null).build();
         itemDto = ItemMapper.toItemDto(item);
@@ -127,6 +128,13 @@ class ItemServiceImplTest {
     void updateWithBadIdUser() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> itemService.update(0L, item.getId(), new HashMap<>()));
+        verify(userRepository).findById(anyLong());
+    }
+
+    @Test
+    void updateWithNoOwner() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user2));
+        assertThrows(NotFoundException.class, () -> itemService.update(user2.getId(), item.getId(), new HashMap<>()));
         verify(userRepository).findById(anyLong());
     }
 
@@ -253,4 +261,42 @@ class ItemServiceImplTest {
                 () -> itemService.addComment(user.getId(), item.getId(), CommentMapper.toDto(comment)));
         verify(userRepository).findById(anyLong());
     }
+
+    @Test
+    void deleteIsOk() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        itemService.delete(user.getId(), item.getId());
+        verify(itemRepository).delete(any());
+    }
+
+    @Test
+    void deleteWithNotOwner() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user2));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        assertThrows(NotFoundException.class,
+                () -> itemService.delete(user2.getId(), item.getId()));
+        verify(itemRepository, never()).delete(any());
+    }
+
+    @Test
+    void getItemDtoByIdIsOk() {
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        when(commentRepository.findAllByItemId(anyLong(), any())).thenReturn(List.of(comment));
+        ItemDto outItemDto = itemService.getItemDtoById(item.getId(), user.getId());
+        assertEquals(outItemDto.getName(), item.getName());
+        assertEquals(1, outItemDto.getComments().size());
+        verify(bookingRepository).findAllByItemIdAndStatus(anyLong(), any(), any());
+    }
+
+    @Test
+    void getItemDtoByIdIsWithNotOwner() {
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        when(commentRepository.findAllByItemId(anyLong(), any())).thenReturn(List.of(comment));
+        item.setOwner(user);
+        ItemDto outItemDto = itemService.getItemDtoById(item.getId(), user2.getId());
+        assertEquals(outItemDto.getName(), item.getName());
+        verify(bookingRepository, never()).findAllByItemIdAndStatus(anyLong(), any(), any());
+    }
+
 }

@@ -9,10 +9,10 @@ import javax.validation.constraints.*;
 @Builder
 public class UserDto {
     private Long id;
-    @NotBlank(message = "Field: Email must be filled!")
+    @NotBlank(message = "Name must be filled!")
     @Pattern(regexp = "\\S+")
     private String name;
-    @Email(message = "Field: Email must have the format EMAIL!")
-    @NotBlank(message = "Field: Email must be filled!")
+    @Email(message = "Email must have the format EMAIL!")
+    @NotBlank(message = "Email must be filled!")
     private String email;
 }

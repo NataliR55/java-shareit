@@ -24,7 +24,7 @@ public class UserController {
 
     @PutMapping
     public UserDto updateUser(@Valid @RequestBody @NotNull UserDto user) {
-        return userService.update(UserMapper.toUser(user));
+        return userService.update(user.getId(), UserMapper.toUser(user));
     }
 
     @PatchMapping("{id}")

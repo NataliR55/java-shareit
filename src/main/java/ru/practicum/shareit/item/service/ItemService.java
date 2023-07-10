@@ -8,19 +8,17 @@ import java.util.List;
 import java.util.Map;
 
 public interface ItemService {
-    ItemDto add(long ownerId, Item item);
+    ItemDto add(long ownerId, ItemDto itemDto);
 
     ItemDto update(Long ownerId, Long itemId, Map<String, String> updates);
 
     Item getItemById(Long itemId);
 
-    Long getOwnerId(Long itemId);
-
     ItemDto getItemDtoById(Long itemId, Long userId);
 
-    List<ItemDto> getAllUserItems(Long userId);
+    List<ItemDto> getAllUserItems(Long userId, int from, int size);
 
-    List<ItemDto> searchItems(Long userId, String query);
+    List<ItemDto> searchItems(String query, int from, int size);
 
     void delete(Long ownerId, Long itemId);
 

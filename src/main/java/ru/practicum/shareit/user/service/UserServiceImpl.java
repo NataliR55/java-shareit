@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
@@ -26,9 +27,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto update(User user) {
-        long id = user.getId();
-        getUserById(id);
+    public UserDto update(Long userId, User user) {
+        getUserById(userId);
         return UserMapper.toUserDto(userRepository.save(user));
     }
 
@@ -37,6 +37,9 @@ public class UserServiceImpl implements UserService {
     public UserDto patchUpdate(long id, Map<String, String> updates) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("User with id %d not found", id)));
+        if (!((updates.containsKey("name") || (updates.containsKey("email"))))) {
+            throw new ValidationException("Update not have correct fields");
+        }
         if (updates.containsKey("name")) {
             String name = updates.get("name");
             user.setName(name.trim());
@@ -45,8 +48,7 @@ public class UserServiceImpl implements UserService {
             String email = updates.get("email");
             user.setEmail(email.trim());
         }
-        userRepository.save(user);
-        return UserMapper.toUserDto(user);
+        return UserMapper.toUserDto(userRepository.save(user));
     }
 
     @Transactional(readOnly = true)

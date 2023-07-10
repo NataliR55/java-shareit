@@ -67,8 +67,7 @@ class UserServiceImplTest {
     @Test
     void patchUpdateWithIncorrectField() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
-        Map<String, String> fieldsUpdate = new HashMap<>();
-        fieldsUpdate.put("surname", "Pedro");
+        Map<String, String> fieldsUpdate = Map.of("surname", "Pedro");
         assertThrows(ValidationException.class, () -> userService.patchUpdate(user.getId(), fieldsUpdate));
         verify(userRepository, never()).save(any(User.class));
     }

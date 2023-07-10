@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.request.controller.ItemRequestController;
-import ru.practicum.shareit.request.dto.InputItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.service.ItemRequestService;
 
@@ -37,12 +36,13 @@ class ItemRequestControllerTest {
     private ObjectMapper mapper;
     @MockBean
     private ItemRequestService itemRequestService;
-    private final InputItemRequestDto inputItemRequestDto = new InputItemRequestDto("Description11");
     private final ItemRequestDto itemRequestDto = ItemRequestDto.builder()
             .id(1L)
-            .description(inputItemRequestDto.getDescription())
+            .description("Description11")
             .created(LocalDateTime.now().plusHours(1))
             .items(null)
+            .build();
+    private final ItemRequestDto inItemRequestDto = ItemRequestDto.builder().id(2L).description("Description2")
             .build();
 
     @Test
@@ -50,7 +50,7 @@ class ItemRequestControllerTest {
         when(itemRequestService.add(any(), anyLong())).thenReturn(itemRequestDto);
         mvc.perform(post("/requests")
                         .header(USER_ID_IN_HEADER, 1L)
-                        .content(mapper.writeValueAsString(inputItemRequestDto))
+                        .content(mapper.writeValueAsString(inItemRequestDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -60,7 +60,7 @@ class ItemRequestControllerTest {
                 .andExpect(jsonPath("$.description").value(itemRequestDto.getDescription()))
                 .andExpect(jsonPath("$.items").value(itemRequestDto.getItems()))
                 .andExpect(jsonPath("$.created").value(itemRequestDto.getCreated().format(dateTimeFormatter)));
-        verify(itemRequestService).add(any(),anyLong());
+        verify(itemRequestService).add(any(), anyLong());
     }
 
     @Test

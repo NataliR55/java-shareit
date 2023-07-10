@@ -27,7 +27,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -107,10 +106,10 @@ class ItemServiceImplTest {
 
     @Test
     void updateIsOk() {
-        Map<String, String> mapUpdate = new HashMap<>();
-        mapUpdate.put("name", "namUpdate");
-        mapUpdate.put("description", "descriptionUpdate");
-        mapUpdate.put("available", "false");
+        Map<String, String> mapUpdate = Map.of(
+                "name", "namUpdate",
+                "description", "descriptionUpdate",
+                "available", "false");
         item.setName(mapUpdate.get("name"));
         item.setDescription(mapUpdate.get("description"));
         item.setAvailable(Boolean.valueOf(mapUpdate.get("available")));
@@ -127,14 +126,15 @@ class ItemServiceImplTest {
     @Test
     void updateWithBadIdUser() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> itemService.update(0L, item.getId(), new HashMap<>()));
+        assertThrows(NotFoundException.class, () -> itemService.update(0L, item.getId(), Map.of("a", "b")));
         verify(userRepository).findById(anyLong());
     }
 
     @Test
     void updateWithNoOwner() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user2));
-        assertThrows(NotFoundException.class, () -> itemService.update(user2.getId(), item.getId(), new HashMap<>()));
+        assertThrows(NotFoundException.class, () -> itemService.update(user2.getId(), item.getId(),
+                Map.of("a", "b")));
         verify(userRepository).findById(anyLong());
     }
 
@@ -142,7 +142,8 @@ class ItemServiceImplTest {
     void updateWithBadIdItem() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> itemService.update(user.getId(), -1L, new HashMap<>()));
+        assertThrows(NotFoundException.class, () -> itemService.update(user.getId(), -1L,
+                Map.of("a", "b")));
         verify(itemRepository).findById(anyLong());
     }
 

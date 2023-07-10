@@ -18,7 +18,6 @@ import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -72,10 +71,11 @@ class ItemControllerTest {
 
     @Test
     void updateItemIsOk() throws Exception {
-        Map<String, String> map = new HashMap<>();
-        map.put("name", "namUpdate");
-        map.put("description", "descriptionUpdate");
-        map.put("available", "false");
+        Map<String, String> map = Map.of(
+                "name", "namUpdate",
+                "description", "descriptionUpdate",
+                "available", "false"
+        );
         item.setName(map.get("name"));
         item.setDescription(map.get("description"));
         item.setAvailable(Boolean.valueOf(map.get("available")));

@@ -17,9 +17,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
 import javax.validation.ValidationException;
-
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -107,9 +105,9 @@ class UserControllerTest {
 
     @Test
     void patchUpdateIsOk() throws Exception {
-        Map<String, String> updates = new HashMap<>();
-        updates.put("name", "nameUpdate");
-        updates.put("email", "update@yandex.ru");
+        Map<String, String> updates = Map.of(
+                "name", "nameUpdate",
+                "email", "update@yandex.ru");
         userDto.setName(updates.get("name"));
         userDto.setEmail(updates.get("email"));
         when(userService.patchUpdate(anyLong(), anyMap())).thenReturn(userDto);

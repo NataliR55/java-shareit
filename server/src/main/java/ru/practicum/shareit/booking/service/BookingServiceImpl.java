@@ -46,7 +46,6 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new ArgumentException(String.format("User with id %d not found", userId)));
     }
 
-
     private Item getItemById(Long itemId) {
         return itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item with id %d not found", itemId)));

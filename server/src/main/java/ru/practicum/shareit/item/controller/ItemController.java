@@ -37,7 +37,6 @@ public class ItemController {
     public List<ItemDto> getAllUserItems(@RequestHeader(USER_ID_IN_HEADER) long ownerId,
                                          @RequestParam(defaultValue = "0") int from,
                                          @RequestParam(defaultValue = "10") int size) {
-
         return itemService.getAllUserItems(ownerId, from, size);
     }
 

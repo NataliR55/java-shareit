@@ -127,7 +127,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> getAllUserItems(Long userId, int from, int size) {
         existsUserWithId(userId);
-        List<Item> items = itemRepository.findAllByOwnerId(userId, PageRequest.of(from / size, size));
+        List<Item> items = itemRepository.findAllByOwnerId(userId, PageRequest.of(from / size, size,
+                Sort.by(Sort.Direction.DESC, "name")));
         Pageable pageable = PageRequest.of(from / size, size, BookingRepository.SORT_BY_START_BY_DESC);
         List<Booking> bookings = bookingRepository.findAllByOwnerIdAndStatus(userId, BookingStatus.APPROVED, pageable);
         List<Comment> comments = commentRepository.findAllByItemIdIn(items.stream()

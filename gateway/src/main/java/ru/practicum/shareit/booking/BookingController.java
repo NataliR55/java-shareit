@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingPostRequestDto;
-import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.exception.StateException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -49,7 +49,7 @@ public class BookingController {
                                                       @RequestParam(name = "size", defaultValue = "10") @Positive
                                                       int size) {
         State state = State.from(stateParam)
-                .orElseThrow(() -> new ValidationException("Unknown state: " + stateParam));
+                .orElseThrow(() -> new StateException("Unknown state: " + stateParam));
         return bookingClient.getBookingsOfBooker(bookerId, state, from, size);
     }
 
@@ -62,7 +62,7 @@ public class BookingController {
                                                      @Positive @RequestParam(name = "size", defaultValue = "10")
                                                      int size) {
         State state = State.from(stateParam)
-                .orElseThrow(() -> new ValidationException("Unknown state: " + stateParam));
+                .orElseThrow(() -> new StateException("Unknown state: " + stateParam));
         return bookingClient.getBookingsOfOwner(ownerId, state, from, size);
     }
 }

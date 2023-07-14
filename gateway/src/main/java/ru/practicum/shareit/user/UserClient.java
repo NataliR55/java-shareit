@@ -30,12 +30,12 @@ public class UserClient extends BaseClient {
         return post("", userDto);
     }
 
-    @CachePut(cacheNames = "user")
+    //@CachePut(cacheNames = "user")
     public ResponseEntity<Object> updateUser(long userId, UserDto userDto) {
         return patch("/" + userId, userDto);
     }
 
-    @Cacheable(cacheNames = "user")
+ //   @Cacheable(cacheNames = "user")
     public ResponseEntity<Object> getUserById(long id) {
         return get("/" + id);
     }

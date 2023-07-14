@@ -13,10 +13,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.repository.BookingRepository;
-import ru.practicum.shareit.exception.AccessException;
-import ru.practicum.shareit.exception.InternalServerError;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
@@ -34,15 +31,21 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking getBookingById(Long bookingId, Long userId) {
-        Booking booking = bookingRepository.findById(bookingId)
+        return bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(String.format("Booking with id: %d not found", bookingId)));
-        return booking;
+    }
+
+    public void existsUser(Long userId) {
+        if (!userRepository.existsUserById(userId)) {
+            throw new InternalServerError(String.format("User with id %d not found", userId));
+        }
     }
 
     private User getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(String.format("User with id %d not found", userId)));
+                .orElseThrow(() -> new ArgumentException(String.format("User with id %d not found", userId)));
     }
+
 
     private Item getItemById(Long itemId) {
         return itemRepository.findById(itemId)
@@ -52,7 +55,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public OutputBookingDto create(InputBookingDto bookingDto, Long userId) {
-        getUserById(userId);
+        existsUser(userId);
         Long itemId = bookingDto.getItemId();
         Item item = getItemById(itemId);
         User owner = item.getOwner();
@@ -83,15 +86,21 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public OutputBookingDto approveBooking(Long bookingId, Long userId, Boolean isApprove) {
-        getUserById(userId);
+        existsUser(userId);
         Booking booking = getBookingById(bookingId, userId);
-        if (booking.getStatus().equals(BookingStatus.APPROVED)) {
-            throw new ValidationException(String.format("Booking with id: %d already have status %s",
-                    bookingId, BookingStatus.APPROVED));
-        }
-        if (!userId.equals(getItemOwnerId(booking))) {
-            throw new AccessException(String.format("Access to User id:%s for booking id:%s is denied",
+        Long itemOwnerId = getItemOwnerId(booking);
+        Long bookerId = booking.getBooker().getId();
+        if (!((userId.equals(itemOwnerId)) || (userId.equals(bookerId)))) {
+            throw new ArgumentException(String.format("User id:%s cannot change Approve booking id:%s",
                     userId, booking.getId()));
+        }
+        if (!userId.equals(itemOwnerId)) {
+            throw new AccessException(String.format("User id:%s cannot change Approve booking id:%s",
+                    userId, booking.getId()));
+        }
+        if (booking.getStatus().equals(BookingStatus.APPROVED)) {
+            throw new ArgumentException(String.format("Booking with id: %d already have status %s",
+                    bookingId, BookingStatus.APPROVED));
         }
         BookingStatus bookingStatus = isApprove ? BookingStatus.APPROVED : BookingStatus.REJECTED;
         booking.setStatus(bookingStatus);
@@ -101,9 +110,8 @@ public class BookingServiceImpl implements BookingService {
     private Long getItemOwnerId(Booking booking) {
         User booker = booking.getBooker();
         if (booker == null) {
-            throw new InternalServerError(String.format("Booking with id: %s Bouker is not installed!", booker.getId()));
+            throw new InternalServerError("Booking with not installed!");
         }
-        Long bookerId = booker.getId();
         Item item = booking.getItem();
         if (item == null) {
             throw new InternalServerError(String.format("Booking with id: %s Item is not installed!", booker.getId()));
@@ -118,7 +126,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public OutputBookingDto getBookingDtoById(Long bookingId, Long userId) {
         Booking booking = getBookingById(bookingId, userId);
-        getUserById(userId);
+        existsUser(userId);
         Long itemOwnerId = getItemOwnerId(booking);
         Long bookerId = booking.getBooker().getId();
         if (!((bookerId.equals(userId)) || (itemOwnerId.equals(userId)))) {
@@ -131,7 +139,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     @Override
     public List<OutputBookingDto> getBookingsOfBooker(String stateText, Long bookerId, int from, int size) {
-        getUserById(bookerId);
+        existsUser(bookerId);
         State state = State.getState(stateText);
         Pageable pageable = PageRequest.of(size == 0 ? 0 : from / size, size, BookingRepository.SORT_BY_START_BY_DESC);
         List<Booking> bookings;
@@ -161,7 +169,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     @Override
     public List<OutputBookingDto> getBookingsOfOwner(String stateText, Long ownerId, int from, int size) {
-        getUserById(ownerId);
+        existsUser(ownerId);
         State state = State.getState(stateText);
         Pageable pageable = PageRequest.of(size == 0 ? 0 : from / size, size, BookingRepository.SORT_BY_START_BY_DESC);
         List<Booking> bookings;

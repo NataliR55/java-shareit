@@ -32,4 +32,4 @@ create table if not EXISTS comments
     text VARCHAR (1000) NOT NULL,
     item_id BIGINT REFERENCES items (id) ON delete CASCADE,
     author_id BIGINT REFERENCES items (id) ON delete CASCADE,
-    created TIMESTAMP WITHOUT TIME ZONE DEFAULT LOCALTIME);
+    created TIMESTAMP WITHOUT TIME ZONE);

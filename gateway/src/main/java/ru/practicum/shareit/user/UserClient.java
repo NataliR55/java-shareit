@@ -31,8 +31,8 @@ public class UserClient extends BaseClient {
     }
 
     @CachePut(cacheNames = "user")
-    public ResponseEntity<Object> updateUser(long userId, UserDto user) {
-        return patch("/" + userId, user);
+    public ResponseEntity<Object> updateUser(long userId, UserDto userDto) {
+        return patch("/" + userId, userDto);
     }
 
     @Cacheable(cacheNames = "user")

@@ -5,7 +5,6 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ItemService {
     ItemDto add(long ownerId, ItemDto itemDto);

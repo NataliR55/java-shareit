@@ -3,8 +3,6 @@ package ru.practicum.shareit.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -30,12 +28,10 @@ public class UserClient extends BaseClient {
         return post("", userDto);
     }
 
-    //@CachePut(cacheNames = "user")
     public ResponseEntity<Object> updateUser(long userId, UserDto userDto) {
         return patch("/" + userId, userDto);
     }
 
- //   @Cacheable(cacheNames = "user")
     public ResponseEntity<Object> getUserById(long id) {
         return get("/" + id);
     }

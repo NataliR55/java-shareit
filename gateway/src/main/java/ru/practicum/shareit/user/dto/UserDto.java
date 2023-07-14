@@ -8,7 +8,6 @@ import ru.practicum.shareit.validationGroup.Update;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 
 @Data
 @AllArgsConstructor
@@ -16,7 +15,6 @@ import javax.validation.constraints.Pattern;
 public class UserDto {
     private Long id;
     @NotBlank(groups = {Create.class}, message = "Name must be filled!")
-    //@Pattern(regexp = "\\S+")
     private String name;
     @NotBlank(groups = {Create.class}, message = "Email must be filled!")
     @Email(groups = {Create.class, Update.class}, message = "Email must have the format  info@email.com!")

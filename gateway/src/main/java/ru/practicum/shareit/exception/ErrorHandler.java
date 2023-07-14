@@ -17,6 +17,7 @@ public class ErrorHandler {
         log.info(strError);
         return new ErrorResponse(strError);
     }
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleStateException(final StateException e) {

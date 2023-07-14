@@ -11,9 +11,7 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.validationGroup.Create;
 import ru.practicum.shareit.validationGroup.Update;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
-import java.util.Map;
 
 @Slf4j
 @Controller
@@ -22,6 +20,7 @@ import java.util.Map;
 @RequestMapping(path = "/users")
 public class UserController {
     private final UserClient userClient;
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ResponseEntity<Object> createUser(@RequestBody @Validated(Create.class) UserDto userDto) {
@@ -30,11 +29,8 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-        public ResponseEntity<Object> update(@PathVariable("userId") long userId,
-                                             @RequestBody @Validated(Update.class) UserDto userDto){
-
-        System.out.println("--------------" + userDto);
-//        UserDto userDto = new UserDto(1l, userDto1.get("name"), userDto1.get("email"));
+    public ResponseEntity<Object> update(@PathVariable("userId") long userId,
+                                         @RequestBody @Validated(Update.class) UserDto userDto) {
         return userClient.updateUser(userId, userDto);
     }
 
